@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -2032,7 +2032,7 @@ MagickBooleanType SyncExifProfile(Image *image,StringInfo *profile)
         break;  /* corrupt EXIF */
       tag_value=(ssize_t) ReadProfileShort(endian,q);
       format=(ssize_t) ReadProfileShort(endian,q+2);
-      if ((format-1) >= EXIF_NUM_FORMATS)
+      if ((format < 0) || ((format-1) >= EXIF_NUM_FORMATS))
         break;
       components=(ssize_t) ReadProfileLong(endian,q+4);
       if (components < 0)

@@ -17,7 +17,7 @@
 %                               August 2003                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the license.  You may  %
@@ -752,8 +752,6 @@ MagickExport size_t CopyMagickString(char *destination,const char *source,
   register size_t
     n;
 
-  if (source == (const char *) NULL)
-    return(0);
   p=source;
   q=destination;
   for (n=length; n > 4; n-=4)
@@ -1780,6 +1778,8 @@ MagickExport void SetStringInfoLength(StringInfo *string_info,
 {
   assert(string_info != (StringInfo *) NULL);
   assert(string_info->signature == MagickCoreSignature);
+  if (string_info->length == length)
+    return;
   if (~length < MagickPathExtent)
     ThrowFatalException(ResourceLimitFatalError,"MemoryAllocationFailed");
   string_info->length=length;

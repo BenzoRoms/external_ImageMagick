@@ -17,7 +17,7 @@
 %                               September 2011                                %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -962,7 +962,8 @@ WandPrivate void CLISettingOptionInfo(MagickCLI *cli_wand,
         {
           /* FUTURE: this is only used by CompareImages() which is used
              only by the "compare" CLI program at this time.  */
-          (void) SetImageOption(_image_info,option+1,ArgOption(NULL));
+          (void) SetImageOption(_image_info,"compare:highlight-color",
+            ArgOption(NULL));
           break;
         }
       CLIWandExceptionBreak(OptionError,"UnrecognizedOption",option);
@@ -1086,7 +1087,8 @@ WandPrivate void CLISettingOptionInfo(MagickCLI *cli_wand,
         {
           /* FUTURE: this is only used by CompareImages() which is used
              only by the "compare" CLI program at this time.  */
-          (void) SetImageOption(_image_info,option+1,ArgOption(NULL));
+          (void) SetImageOption(_image_info,"compare:lowlight-color",
+            ArgOption(NULL));
           break;
         }
       if (LocaleCompare("loop",option+1) == 0)
@@ -2122,10 +2124,10 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
         {
           double
             gamma;
-            
+
           KernelInfo
             *kernel_info;
-            
+
           register ssize_t
             j;
 
@@ -2732,9 +2734,27 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
         }
       if (LocaleCompare("mask",option+1) == 0)
         {
-          CLIWandWarnReplaced("-read-mask");
-          (void) CLISimpleOperatorImage(cli_wand,"-read-mask",NULL,NULL,
-            exception);
+          Image
+            *mask;
+
+          if (IfPlusOp)
+            {
+              /*
+                Remove a mask.
+              */
+              (void) SetImageMask(_image,WritePixelMask,(Image *) NULL,
+                _exception);
+              break;
+            }
+          /*
+            Set the image mask.
+          */
+          mask=GetImageCache(_image_info,arg1,_exception);
+          if (mask == (Image *) NULL)
+            break;
+          (void) NegateImage(mask,MagickFalse,exception);
+          (void) SetImageMask(_image,WritePixelMask,mask,_exception);
+          mask=DestroyImage(mask);
           break;
         }
       if (LocaleCompare("matte",option+1) == 0)
@@ -3026,14 +3046,6 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
     }
     case 'r':
     {
-      if (LocaleCompare("rotational-blur",option+1) == 0)
-        {
-          flags=ParseGeometry(arg1,&geometry_info);
-          if ((flags & RhoValue) == 0)
-            CLIWandExceptArgBreak(OptionError,"InvalidArgument",option,arg1);
-          new_image=RotationalBlurImage(_image,geometry_info.rho,_exception);
-          break;
-        }
       if (LocaleCompare("raise",option+1) == 0)
         {
           if (IsGeometry(arg1) == MagickFalse)
@@ -3089,7 +3101,22 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
       if (LocaleCompare("recolor",option+1) == 0)
         {
           CLIWandWarnReplaced("-color-matrix");
-          (void) CLISimpleOperatorImage(cli_wand,"-color-matrix",arg1,NULL,exception);
+          (void) CLISimpleOperatorImage(cli_wand,"-color-matrix",arg1,NULL,
+            exception);
+        }
+      if (LocaleCompare("region",option+1) == 0)
+        {
+          if (IsGeometry(arg1) == MagickFalse)
+            CLIWandExceptArgBreak(OptionError,"InvalidArgument",option,arg1);
+          if (*option == '+')
+            {
+              (void) SetImageRegionMask(_image,ReadPixelMask,
+                (const RectangleInfo *) NULL,_exception);
+              break;
+            }
+          (void) ParseGravityGeometry(_image,arg1,&geometry,_exception);
+          (void) SetImageRegionMask(_image,ReadPixelMask,&geometry,_exception);
+          break;
         }
       if (LocaleCompare("remap",option+1) == 0)
         {
@@ -3156,6 +3183,14 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
           if ((flags & LessValue) != 0 && (_image->columns >= _image->rows))
             break;
           new_image=RotateImage(_image,geometry_info.rho,_exception);
+          break;
+        }
+      if (LocaleCompare("rotational-blur",option+1) == 0)
+        {
+          flags=ParseGeometry(arg1,&geometry_info);
+          if ((flags & RhoValue) == 0)
+            CLIWandExceptArgBreak(OptionError,"InvalidArgument",option,arg1);
+          new_image=RotationalBlurImage(_image,geometry_info.rho,_exception);
           break;
         }
       CLIWandExceptionBreak(OptionError,"UnrecognizedOption",option);
@@ -4285,7 +4320,10 @@ WandPrivate MagickBooleanType CLIListOperatorImages(MagickCLI *cli_wand,
           break;
         }
       if (LocaleCompare("metric",option+1) == 0)
-        break;
+        {
+          (void) SetImageOption(_image_info,option+1,arg1);
+          break;
+        }
       if (LocaleCompare("morph",option+1) == 0)
         {
           Image

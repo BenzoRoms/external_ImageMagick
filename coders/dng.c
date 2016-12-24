@@ -17,7 +17,7 @@
 %                                 July 1999                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -53,6 +53,7 @@
 #include "MagickCore/log.h"
 #include "MagickCore/magick.h"
 #include "MagickCore/memory_.h"
+#include "MagickCore/opencl.h"
 #include "MagickCore/resource_.h"
 #include "MagickCore/quantum-private.h"
 #include "MagickCore/static.h"
@@ -90,6 +91,63 @@
 %    o exception: return any errors or warnings in this structure.
 %
 */
+
+#if defined(MAGICKCORE_WINDOWS_SUPPORT) && defined(MAGICKCORE_OPENCL_SUPPORT)
+static void InitializeDcrawOpenCL(ExceptionInfo *exception)
+{
+  MagickBooleanType
+    opencl_disabled;
+
+  MagickCLDevice
+    *devices;
+
+  size_t
+    length;
+
+  ssize_t
+    i;
+
+  (void) SetEnvironmentVariable("DCR_CL_PLATFORM",NULL);
+  (void) SetEnvironmentVariable("DCR_CL_DEVICE",NULL);
+  (void) SetEnvironmentVariable("DCR_CL_DISABLED",NULL);
+  if (GetOpenCLEnabled() == MagickFalse)
+    {
+      (void) SetEnvironmentVariable("DCR_CL_DISABLED","1");
+      return;
+    }
+  devices=GetOpenCLDevices(&length,exception);
+  if (devices == (MagickCLDevice *) NULL)
+    return;
+  for (i=0; i < (ssize_t) length; i++)
+  {
+    const char
+      *name;
+
+    MagickCLDevice
+      device;
+
+    device=devices[i];
+    if (GetOpenCLDeviceEnabled(device) == MagickFalse)
+      continue;
+    name=GetOpenCLDeviceVendorName(device);
+    if (name != (const char *) NULL)
+      (void) SetEnvironmentVariable("DCR_CL_PLATFORM",name);
+    name=GetOpenCLDeviceName(device);
+    if (name != (const char *) NULL)
+      (void) SetEnvironmentVariable("DCR_CL_DEVICE",name);
+    return;
+  }
+}
+#else
+static void InitializeDcrawOpenCL(ExceptionInfo *magick_unused(exception))
+{
+  magick_unreferenced(exception);
+#if defined(MAGICKCORE_WINDOWS_SUPPORT)
+  (void) SetEnvironmentVariable("DCR_CL_DISABLED","1");
+#endif
+}
+#endif
+
 static Image *ReadDNGImage(const ImageInfo *image_info,ExceptionInfo *exception)
 {
   ExceptionInfo
@@ -126,6 +184,7 @@ static Image *ReadDNGImage(const ImageInfo *image_info,ExceptionInfo *exception)
   /*
     Convert DNG to PPM with delegate.
   */
+  InitializeDcrawOpenCL(exception);
   image=AcquireImage(image_info,exception);
   read_info=CloneImageInfo(image_info);
   SetImageInfoBlob(read_info,(void *) NULL,0);
@@ -287,7 +346,6 @@ ModuleExport size_t RegisterDNGImage(void)
   entry->flags^=CoderBlobSupportFlag;
   entry->flags|=CoderSeekableStreamFlag;
   entry->format_type=ExplicitFormatType;
-  entry->module=ConstantString("DNG");
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("DNG","KDC","Kodak Digital Camera Raw Image Format");
   entry->decoder=(DecodeImageHandler *) ReadDNGImage;

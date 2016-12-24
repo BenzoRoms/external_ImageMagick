@@ -17,7 +17,7 @@
 %                            September 1994                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -383,8 +383,8 @@ static ssize_t PrintChannelMoments(FILE *file,const PixelChannel channel,
   return(n);
 }
 
-static ssize_t PrintChannelPerceptualHash(FILE *file,const PixelChannel channel,
-  const char *name,const ChannelPerceptualHash *channel_phash)
+static ssize_t PrintChannelPerceptualHash(Image *image,FILE *file,
+  const ChannelPerceptualHash *channel_phash)
 {
   register ssize_t
     i;
@@ -392,11 +392,44 @@ static ssize_t PrintChannelPerceptualHash(FILE *file,const PixelChannel channel,
   ssize_t
     n;
 
-  n=FormatLocaleFile(file,"    %s:\n",name);
-  for (i=0; i < MaximumNumberOfPerceptualHashes; i++)
-    n+=FormatLocaleFile(file,"      PH%.20g: %.*g, %.*g\n",i+1.0,
-      GetMagickPrecision(),channel_phash[channel].srgb_hu_phash[i],
-      GetMagickPrecision(),channel_phash[channel].hclp_hu_phash[i]);
+  (void) FormatLocaleFile(file,"  Channel perceptual hash: ");
+  for (i=0; i < (ssize_t) channel_phash[0].number_colorspaces; i++)
+  {
+    (void) FormatLocaleFile(file,"%s",CommandOptionToMnemonic(
+      MagickColorspaceOptions,(ssize_t) channel_phash[0].colorspace[i]));
+    if (i < (ssize_t) (channel_phash[0].number_colorspaces-1))
+      (void) FormatLocaleFile(file,", ");
+  }
+  (void) FormatLocaleFile(file,"\n");
+  n=0;
+  for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+  {
+    register ssize_t
+      j;
+
+    PixelChannel channel=GetPixelChannelChannel(image,i);
+    if (channel == IndexPixelChannel)
+      continue;
+    PixelTrait traits=GetPixelChannelTraits(image,channel);
+    if (traits == UndefinedPixelTrait)
+      continue;
+    n=FormatLocaleFile(file,"    Channel %.20g:\n",(double) channel);
+    for (j=0; j < MaximumNumberOfPerceptualHashes; j++)
+    {
+      register ssize_t
+        k;
+
+      n+=FormatLocaleFile(file,"      PH%.20g: ",(double) j+1);
+      for (k=0; k < (ssize_t) channel_phash[0].number_colorspaces; k++)
+      {
+        n+=FormatLocaleFile(file,"%.*g",GetMagickPrecision(),
+          channel_phash[channel].phash[k][j]);
+        if (k < (ssize_t) (channel_phash[0].number_colorspaces-1))
+          n+=FormatLocaleFile(file,", ");
+      }
+      n+=FormatLocaleFile(file,"\n");
+    }
+  }
   return(n);
 }
 
@@ -763,8 +796,8 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
           channel_statistics[AlphaPixelChannel].depth);
       scale=1.0;
       if (image->depth <= MAGICKCORE_QUANTUM_DEPTH)
-        scale=(double) QuantumRange/((size_t) QuantumRange >> ((size_t)
-          MAGICKCORE_QUANTUM_DEPTH-image->depth));
+        scale=(double) (QuantumRange/((size_t) QuantumRange >> ((size_t)
+          MAGICKCORE_QUANTUM_DEPTH-image->depth)));
     }
   if (channel_statistics != (ChannelStatistics *) NULL)
     {
@@ -865,16 +898,7 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
     }
   if (channel_phash != (ChannelPerceptualHash *) NULL)
     {
-      (void) FormatLocaleFile(file,"  Channel perceptual hash:\n");
-      (void) PrintChannelPerceptualHash(file,RedPixelChannel,"Red, Hue",
-        channel_phash);
-      (void) PrintChannelPerceptualHash(file,GreenPixelChannel,"Green, Chroma",
-        channel_phash);
-      (void) PrintChannelPerceptualHash(file,BluePixelChannel,"Blue, Luma",
-        channel_phash);
-      if (image->alpha_trait != UndefinedPixelTrait)
-        (void) PrintChannelPerceptualHash(file,AlphaPixelChannel,"Alpha, Alpha",
-          channel_phash);
+      (void) PrintChannelPerceptualHash(image,file,channel_phash);
       channel_phash=(ChannelPerceptualHash *) RelinquishMagickMemory(
         channel_phash);
     }
@@ -1392,9 +1416,12 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
   if (strlen(format) > 1)
     format[strlen(format)-1]='\0';
   (void) FormatLocaleFile(file,"  Number pixels: %s\n",format);
-  (void) FormatMagickSize((MagickSizeType) ((double) image->columns*image->rows/
-    elapsed_time+0.5),MagickFalse,"B",MagickPathExtent,format);
-  (void) FormatLocaleFile(file,"  Pixels per second: %s\n",format);
+  if (elapsed_time > MagickEpsilon)
+    {
+      (void) FormatMagickSize((MagickSizeType) ((double) image->columns*
+        image->rows/elapsed_time+0.5),MagickFalse,"B",MagickPathExtent,format);
+      (void) FormatLocaleFile(file,"  Pixels per second: %s\n",format);
+    }
   (void) FormatLocaleFile(file,"  User time: %0.3fu\n",user_time);
   (void) FormatLocaleFile(file,"  Elapsed time: %lu:%02lu.%03lu\n",
     (unsigned long) (elapsed_time/60.0),(unsigned long) ceil(fmod(elapsed_time,

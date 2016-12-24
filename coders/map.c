@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -396,22 +396,23 @@ static MagickBooleanType WriteMAPImage(const ImageInfo *image_info,Image *image,
     Write colormap to file.
   */
   q=colormap;
-  if (image->depth <= 8)
+  q=colormap;
+  if (image->colors <= 256)
     for (i=0; i < (ssize_t) image->colors; i++)
     {
-      *q++=(unsigned char) image->colormap[i].red;
-      *q++=(unsigned char) image->colormap[i].green;
-      *q++=(unsigned char) image->colormap[i].blue;
+      *q++=(unsigned char) ScaleQuantumToChar(image->colormap[i].red);
+      *q++=(unsigned char) ScaleQuantumToChar(image->colormap[i].green);
+      *q++=(unsigned char) ScaleQuantumToChar(image->colormap[i].blue);
     }
   else
     for (i=0; i < (ssize_t) image->colors; i++)
     {
-      *q++=(unsigned char) ((size_t) image->colormap[i].red >> 8);
-      *q++=(unsigned char) image->colormap[i].red;
-      *q++=(unsigned char) ((size_t) image->colormap[i].green >> 8);
-      *q++=(unsigned char) image->colormap[i].green;
-      *q++=(unsigned char) ((size_t) image->colormap[i].blue >> 8);
-      *q++=(unsigned char) image->colormap[i].blue;
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].red) >> 8);
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].red) & 0xff);
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].green) >> 8);
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].green) & 0xff);;
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].blue) >> 8);
+      *q++=(unsigned char) (ScaleQuantumToShort(image->colormap[i].blue) & 0xff);
     }
   (void) WriteBlob(image,packet_size*image->colors,colormap);
   colormap=(unsigned char *) RelinquishMagickMemory(colormap);

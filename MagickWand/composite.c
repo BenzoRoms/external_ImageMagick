@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -510,9 +510,6 @@ WandExport MagickBooleanType CompositeImageCommand(ImageInfo *image_info,
       }
     if (IsCommandOption(option) == MagickFalse)
       {
-        Image
-          *images;
-
         /*
           Read input image.
         */

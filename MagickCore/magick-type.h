@@ -1,5 +1,5 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
   
   You may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ typedef unsigned int Quantum;
 #define QuantumFormat  "%u"
 #endif
 #elif (MAGICKCORE_QUANTUM_DEPTH == 64)
-#define MAGICKCORE_HDRI_SUPPORT
+#define MAGICKCORE_HDRI_SUPPORT  1
 #define MaxColormapSize  65536UL
 #define MaxMap  65535UL
 

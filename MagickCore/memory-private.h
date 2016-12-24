@@ -1,5 +1,5 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
   
   You may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 
-#if defined(MAGICK_TARGET_CPU) && (MAGICK_TARGET_CPU == powerpc)
+#if defined(__powerpc__)
 #  define CACHE_LINE_SIZE  128
 #else
 #  define CACHE_LINE_SIZE  64

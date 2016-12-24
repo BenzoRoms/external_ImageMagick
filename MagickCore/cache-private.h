@@ -1,5 +1,5 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
 
   You may not use this file except in compliance with the License.
@@ -281,6 +281,7 @@ extern MagickPrivate void
   GetPixelCacheTileSize(const Image *,size_t *,size_t *),
   GetPixelCacheMethods(CacheMethods *),
   ResetPixelCacheEpoch(void),
+  ResetPixelCacheChannels(Image *),
   SetPixelCacheMethods(Cache,CacheMethods *);
 
 #if defined(MAGICKCORE_OPENCL_SUPPORT)

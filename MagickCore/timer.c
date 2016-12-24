@@ -17,7 +17,7 @@
 %                              January 1993                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -188,7 +188,26 @@ MagickExport TimerInfo *DestroyTimerInfo(TimerInfo *timer_info)
 */
 static double ElapsedTime(void)
 {
-#if defined(MAGICKCORE_HAVE_TIMES) && defined(MAGICKCORE_HAVE_SYSCONF)
+#if defined(HAVE_CLOCK_GETTIME)
+#define NANOSECONDS_PER_SECOND  1000000000.0
+#if defined(CLOCK_HIGHRES)
+#  define CLOCK_ID CLOCK_HIGHRES
+#elif defined(CLOCK_MONOTONIC_RAW)
+#  define CLOCK_ID CLOCK_MONOTONIC_RAW
+#elif defined(CLOCK_MONOTONIC_PRECISE)
+#  define CLOCK_ID CLOCK_MONOTONIC_PRECISE
+#elif defined(CLOCK_MONOTONIC)
+#  define CLOCK_ID CLOCK_MONOTONIC
+#else
+#  define CLOCK_ID CLOCK_REALTIME
+#endif
+
+  struct timespec 
+    timer;
+
+  (void) clock_gettime(CLOCK_ID,&timer);
+  return((double) timer.tv_sec+timer.tv_nsec/NANOSECONDS_PER_SECOND);
+#elif defined(MAGICKCORE_HAVE_TIMES) && defined(MAGICKCORE_HAVE_SYSCONF)
   struct tms
     timer;
 

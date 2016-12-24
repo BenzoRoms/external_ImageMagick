@@ -19,7 +19,7 @@
 %                                  2008.05.07                                 %
 %                                     v 0.9                                   %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -625,9 +625,9 @@ static MagickBooleanType WriteIPLImage(const ImageInfo *image_info,Image *image,
     p=GetVirtualPixels(image,0,y,image->columns,1,exception);
     if (p == (const Quantum *) NULL)
       break;
-      (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
-        GrayQuantum, pixels,exception);
-      (void) WriteBlob(image, image->columns*image->depth/8, pixels);
+    (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
+      GrayQuantum, pixels,exception);
+    (void) WriteBlob(image, image->columns*image->depth/8, pixels);
   }
 
 }
@@ -637,9 +637,9 @@ static MagickBooleanType WriteIPLImage(const ImageInfo *image_info,Image *image,
     p=GetVirtualPixels(image,0,y,image->columns,1,exception);
     if (p == (const Quantum *) NULL)
       break;
-      (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
-        RedQuantum, pixels,exception);
-      (void) WriteBlob(image, image->columns*image->depth/8, pixels);
+    (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
+      RedQuantum, pixels,exception);
+    (void) WriteBlob(image, image->columns*image->depth/8, pixels);
   }
 
     /* Green frame */
@@ -647,9 +647,9 @@ static MagickBooleanType WriteIPLImage(const ImageInfo *image_info,Image *image,
       p=GetVirtualPixels(image,0,y,image->columns,1,exception);
       if (p == (const Quantum *) NULL)
         break;
-        (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
-          GreenQuantum, pixels,exception);
-        (void) WriteBlob(image, image->columns*image->depth/8, pixels);
+      (void) ExportQuantumPixels(image,(CacheView *) NULL, quantum_info,
+        GreenQuantum, pixels,exception);
+      (void) WriteBlob(image, image->columns*image->depth/8, pixels);
     }
     /* Blue frame */
     for(y = 0; y < (ssize_t) ipl_info.height; y++){
@@ -669,8 +669,8 @@ static MagickBooleanType WriteIPLImage(const ImageInfo *image_info,Image *image,
     }
   }
   quantum_info=DestroyQuantumInfo(quantum_info);
-      if (GetNextImageInList(image) == (Image *) NULL)
-  break;
+  if (GetNextImageInList(image) == (Image *) NULL)
+    break;
       image=SyncNextImageInList(image);
       status=SetImageProgress(image,SaveImagesTag,scene++,
         GetImageListLength(image));

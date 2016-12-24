@@ -17,7 +17,7 @@
 %                               December 2003                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -124,10 +124,12 @@ static MagickBooleanType CompareUsage(void)
       "                     de-emphasize pixel differences with this color",
       "-metric type         measure differences between images with this metric",
       "-monitor             monitor progress",
+      "-negate              replace every pixel with its complementary color ",
       "-profile filename    add, delete, or apply an image profile",
       "-quality value       JPEG/MIFF/PNG compression level",
       "-quiet               suppress all warning messages",
       "-quantize colorspace reduce colors in this colorspace",
+      "-read-mask filename  associate a read mask with the image",
       "-regard-warnings     pay attention to warning messages",
       "-respect-parentheses settings remain in effect until parenthesis boundary",
       "-sampling-factor geometry",
@@ -148,6 +150,7 @@ static MagickBooleanType CompareUsage(void)
       "-version             print version information",
       "-virtual-pixel method",
       "                     virtual pixel access method",
+      "-write-mask filename  associate a write mask with the image",
       (char *) NULL
     };
 
@@ -727,6 +730,12 @@ WandExport MagickBooleanType CompareImagesCommand(ImageInfo *image_info,
           break;
         ThrowCompareException(OptionError,"UnrecognizedOption",option)
       }
+      case 'n':
+      {
+        if (LocaleCompare("negate",option+1) == 0)
+          break;
+        ThrowCompareException(OptionError,"UnrecognizedOption",option)
+      }
       case 'p':
       {
         if (LocaleCompare("profile",option+1) == 0)
@@ -774,6 +783,15 @@ WandExport MagickBooleanType CompareImagesCommand(ImageInfo *image_info,
       }
       case 'r':
       {
+        if (LocaleCompare("read-mask",option+1) == 0)
+          {
+            if (*option == '+')
+              break;
+            i++;
+            if (i == (ssize_t) argc)
+              ThrowCompareException(OptionError,"MissingArgument",option);
+            break;
+          }
         if (LocaleCompare("regard-warnings",option+1) == 0)
           break;
         if (LocaleNCompare("respect-parentheses",option+1,17) == 0)
@@ -915,6 +933,19 @@ WandExport MagickBooleanType CompareImagesCommand(ImageInfo *image_info,
             if (method < 0)
               ThrowCompareException(OptionError,
                 "UnrecognizedVirtualPixelMethod",argv[i]);
+            break;
+          }
+        ThrowCompareException(OptionError,"UnrecognizedOption",option)
+      }
+      case 'w':
+      {
+        if (LocaleCompare("write-mask",option+1) == 0)
+          {
+            if (*option == '+')
+              break;
+            i++;
+            if (i == (ssize_t) argc)
+              ThrowCompareException(OptionError,"MissingArgument",option);
             break;
           }
         ThrowCompareException(OptionError,"UnrecognizedOption",option)

@@ -17,7 +17,7 @@
 %                               August 2013                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -379,7 +379,10 @@ static MagickBooleanType WriteRGFImage(const ImageInfo *image_info,Image *image,
       p+=GetPixelChannels(image);
     }
     if (bit != 0)
+    {
+      byte >>= 8 - bit;
       (void) WriteBlobByte(image,(unsigned char) byte);
+    }
     status=SetImageProgress(image,SaveImageTag,(MagickOffsetType) y,
       image->rows);
     if (status == MagickFalse)

@@ -17,7 +17,7 @@
 %                                October 2002                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -407,7 +407,7 @@ MagickExport size_t GetImageDepth(const Image *image,ExceptionInfo *exception)
           continue;
         for (x=0; x < (ssize_t) image->columns; x++)
         {
-          if (GetPixelReadMask(image,p) == 0)
+          if (GetPixelWriteMask(image,p) == 0)
             {
               p+=GetPixelChannels(image);
               continue;
@@ -464,7 +464,7 @@ MagickExport size_t GetImageDepth(const Image *image,ExceptionInfo *exception)
       continue;
     for (x=0; x < (ssize_t) image->columns; x++)
     {
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           p+=GetPixelChannels(image);
           continue;
@@ -1095,7 +1095,7 @@ MagickExport MagickBooleanType SetImageDepth(Image *image,
           register ssize_t
             i;
 
-          if (GetPixelReadMask(image,q) == 0)
+          if (GetPixelWriteMask(image,q) == 0)
             {
               q+=GetPixelChannels(image);
               continue;
@@ -1159,7 +1159,7 @@ MagickExport MagickBooleanType SetImageDepth(Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -1264,7 +1264,7 @@ MagickExport MagickBooleanType SetImageType(Image *image,const ImageType type,
           status=QuantizeImage(quantize_info,image,exception);
           quantize_info=DestroyQuantizeInfo(quantize_info);
         }
-      image->colors=2;
+      status=AcquireImageColormap(image,2,exception);
       image->alpha_trait=UndefinedPixelTrait;
       break;
     }

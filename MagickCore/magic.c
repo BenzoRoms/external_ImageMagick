@@ -17,7 +17,7 @@
 %                                 July 2000                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -198,9 +198,7 @@ static const MagicMapInfo
     { "XBM", 0, MagicPattern("#define") },
     { "XCF", 0, MagicPattern("gimp xcf") },
     { "XEF", 0, MagicPattern("FOVb") },
-    { "XPM", 1, MagicPattern("* XPM *") },
-    { "XWD", 4, MagicPattern("\007\000\000") },
-    { "XWD", 5, MagicPattern("\000\000\007") }
+    { "XPM", 1, MagicPattern("* XPM *") }
  };
 
 static LinkedListInfo

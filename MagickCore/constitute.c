@@ -17,7 +17,7 @@
 %                               October 1998                                  %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -308,7 +308,8 @@ MagickExport Image *PingImages(ImageInfo *image_info,const char *filename,
           read_info=DestroyImageInfo(read_info);
           return(PingImage(image_info,exception));
         }
-      (void) CopyMagickString(ping_filename,read_info->filename,MagickPathExtent);
+      (void) CopyMagickString(ping_filename,read_info->filename,
+        MagickPathExtent);
       images=NewImageList();
       extent=(ssize_t) (read_info->scene+read_info->number_scenes);
       for (scene=(ssize_t) read_info->scene; scene < (ssize_t) extent; scene++)
@@ -827,27 +828,27 @@ MagickExport Image *ReadImages(ImageInfo *image_info,const char *filename,
       sans=AcquireExceptionInfo();
       (void) SetImageInfo(read_info,0,sans);
       sans=DestroyExceptionInfo(sans);
-      if (read_info->number_scenes == 0)
+      if (read_info->number_scenes != 0)
         {
+          (void) CopyMagickString(read_filename,read_info->filename,
+            MagickPathExtent);
+          images=NewImageList();
+          extent=(ssize_t) (read_info->scene+read_info->number_scenes);
+          scene=(ssize_t) read_info->scene;
+          for ( ; scene < (ssize_t) extent; scene++)
+          {
+            (void) InterpretImageFilename(image_info,(Image *) NULL,
+              read_filename,(int) scene,read_info->filename,exception);
+            image=ReadImage(read_info,exception);
+            if (image == (Image *) NULL)
+              continue;
+            AppendImageToList(&images,image);
+          }
           read_info=DestroyImageInfo(read_info);
-          return(ReadImage(image_info,exception));
+          return(images);
         }
-      (void) CopyMagickString(read_filename,read_info->filename,
-        MagickPathExtent);
-      images=NewImageList();
-      extent=(ssize_t) (read_info->scene+read_info->number_scenes);
-      for (scene=(ssize_t) read_info->scene; scene < (ssize_t) extent; scene++)
-      {
-        (void) InterpretImageFilename(image_info,(Image *) NULL,read_filename,
-          (int) scene,read_info->filename,exception);
-        image=ReadImage(read_info,exception);
-        if (image == (Image *) NULL)
-          continue;
-        AppendImageToList(&images,image);
-      }
-      read_info=DestroyImageInfo(read_info);
-      return(images);
     }
+  (void) CopyMagickString(read_info->filename,filename,MagickPathExtent);
   image=ReadImage(read_info,exception);
   read_info=DestroyImageInfo(read_info);
   return(image);

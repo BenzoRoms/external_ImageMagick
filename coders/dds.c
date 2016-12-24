@@ -19,7 +19,7 @@
 %                              September 2013                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -1862,7 +1862,41 @@ static MagickBooleanType ReadDDSInfo(Image *image, DDSInfo *dds_info)
   return MagickTrue;
 }
 
-static MagickBooleanType ReadDXT1(Image *image, DDSInfo *dds_info,
+static MagickBooleanType SetDXT1Pixels(Image *image,ssize_t x,ssize_t y,
+  DDSColors colors,size_t bits,Quantum *q)
+{
+  register ssize_t
+    i;
+
+  ssize_t
+    j;
+
+  unsigned char
+    code;
+
+  for (j = 0; j < 4; j++)
+  {
+    for (i = 0; i < 4; i++)
+    {
+      if ((x + i) < (ssize_t) image->columns &&
+          (y + j) < (ssize_t) image->rows)
+        {
+          code=(unsigned char) ((bits >> ((j*4+i)*2)) & 0x3);
+          SetPixelRed(image,ScaleCharToQuantum(colors.r[code]),q);
+          SetPixelGreen(image,ScaleCharToQuantum(colors.g[code]),q);
+          SetPixelBlue(image,ScaleCharToQuantum(colors.b[code]),q);
+          SetPixelOpacity(image,ScaleCharToQuantum(colors.a[code]),q);
+          if ((colors.a[code] != 0) &&
+              (image->alpha_trait == UndefinedPixelTrait))
+            return(MagickFalse);
+          q+=GetPixelChannels(image);
+        }
+    }
+  }
+  return(MagickTrue);
+}
+
+static MagickBooleanType ReadDXT1(Image *image,DDSInfo *dds_info,
   ExceptionInfo *exception)
 {
   DDSColors
@@ -1870,63 +1904,48 @@ static MagickBooleanType ReadDXT1(Image *image, DDSInfo *dds_info,
 
   register Quantum
     *q;
-  
+
   register ssize_t
-    i,
     x;
-  
+
   size_t
     bits;
 
   ssize_t
-    j,
     y;
-  
-  unsigned char
-    code;
-  
+
   unsigned short
     c0,
     c1;
-  
-  for (y = 0; y < (ssize_t) dds_info->height; y += 4)
+
+  for (y = 0; y < (ssize_t) image->rows; y += 4)
   {
-    for (x = 0; x < (ssize_t) dds_info->width; x += 4)
+    for (x = 0; x < (ssize_t) image->columns; x += 4)
     {
       /* Get 4x4 patch of pixels to write on */
-      q = QueueAuthenticPixels(image, x, y, MagickMin(4, dds_info->width - x),
-        MagickMin(4, dds_info->height - y),exception);
-      
+      q=QueueAuthenticPixels(image,x,y,MagickMin(4,image->columns-x),
+        MagickMin(4,image->rows-y),exception);
+
       if (q == (Quantum *) NULL)
         return MagickFalse;
-      
+
       /* Read 8 bytes of data from the image */
-      c0 = ReadBlobLSBShort(image);
-      c1 = ReadBlobLSBShort(image);
-      bits = ReadBlobLSBLong(image);
-      
-      CalculateColors(c0, c1, &colors, MagickFalse);
-      
+      c0=ReadBlobLSBShort(image);
+      c1=ReadBlobLSBShort(image);
+      bits=ReadBlobLSBLong(image);
+
+      CalculateColors(c0,c1,&colors,MagickFalse);
+
       /* Write the pixels */
-      for (j = 0; j < 4; j++)
-      {
-        for (i = 0; i < 4; i++)
+      if (SetDXT1Pixels(image,x,y,colors,bits,q) == MagickFalse)
         {
-          if ((x + i) < (ssize_t) dds_info->width &&
-              (y + j) < (ssize_t) dds_info->height)
-            {
-              code = (unsigned char) ((bits >> ((j*4+i)*2)) & 0x3);
-              SetPixelRed(image,ScaleCharToQuantum(colors.r[code]),q);
-              SetPixelGreen(image,ScaleCharToQuantum(colors.g[code]),q);
-              SetPixelBlue(image,ScaleCharToQuantum(colors.b[code]),q);
-              SetPixelAlpha(image,ScaleCharToQuantum(colors.a[code]),q);
-              if (colors.a[code] && (image->alpha_trait == UndefinedPixelTrait))
-                image->alpha_trait=BlendPixelTrait;  /* Correct matte */
-              q+=GetPixelChannels(image);
-            }
+          /* Correct alpha */
+          SetImageAlpha(image,QuantumRange,exception);
+          q=QueueAuthenticPixels(image,x,y,MagickMin(4,image->columns-x),
+            MagickMin(4,image->rows-y),exception);
+          SetDXT1Pixels(image,x,y,colors,bits,q);
         }
-      }
-      
+
       if (SyncAuthenticPixels(image,exception) == MagickFalse)
         return MagickFalse;
     }
@@ -2652,7 +2671,7 @@ static MagickBooleanType WriteDDSImage(const ImageInfo *image_info,
         {
           columns=image->columns;
           rows=image->rows;
-          while (columns != 1 && rows != 1 && mipmaps != maxMipmaps)
+          while ((columns != 1 || rows != 1) && mipmaps != maxMipmaps)
           {
             columns=DIV2(columns);
             rows=DIV2(rows);
@@ -2888,7 +2907,7 @@ static void WriteFourCC(Image *image, const size_t compression,
         }
       }
 
-      for (i=0; i <  (ssize_t) count; i++)
+      for (i=0; i < (ssize_t) count; i++)
         points[i].w = sqrt(points[i].w);
 
       if (compression == FOURCC_DXT5)
@@ -2998,7 +3017,7 @@ static MagickBooleanType WriteMipmaps(Image *image, const size_t pixelFormat,
 
   for (i=0; i< (ssize_t) mipmaps; i++)
   {
-    resize_image = ResizeImage(image,columns/2,rows/2,TriangleFilter,
+    resize_image = ResizeImage(image,DIV2(columns),DIV2(rows),TriangleFilter,
       exception);
 
     if (resize_image == (Image *) NULL)

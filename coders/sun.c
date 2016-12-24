@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -263,7 +263,8 @@ static Image *ReadSUNImage(const ImageInfo *image_info,ExceptionInfo *exception)
     bytes_per_line,
     extent,
     height,
-    pixels_length;
+    pixels_length,
+    quantum;
 
   ssize_t
     count,
@@ -440,9 +441,10 @@ static Image *ReadSUNImage(const ImageInfo *image_info,ExceptionInfo *exception)
         sun_data=(unsigned char *) RelinquishMagickMemory(sun_data);
         ThrowReaderException(ResourceLimitError,"ImproperImageHeader");
       }
-    bytes_per_line+=15;
+    quantum=sun_info.depth == 1 ? 15 : 7;
+    bytes_per_line+=quantum;
     bytes_per_line<<=1;
-    if ((bytes_per_line >> 1) != (sun_info.width*sun_info.depth+15))
+    if ((bytes_per_line >> 1) != (sun_info.width*sun_info.depth+quantum))
       {
         sun_data=(unsigned char *) RelinquishMagickMemory(sun_data);
         ThrowReaderException(ResourceLimitError,"ImproperImageHeader");
@@ -816,10 +818,10 @@ static MagickBooleanType WriteSUNImage(const ImageInfo *image_info,Image *image,
         /*
           Full color SUN raster.
         */
-        sun_info.depth=(unsigned int) image->alpha_trait != UndefinedPixelTrait ?
-          32U : 24U;
-        sun_info.length=(unsigned int) ((image->alpha_trait != UndefinedPixelTrait ?
-          4 : 3)*number_pixels);
+        sun_info.depth=(unsigned int) image->alpha_trait !=
+          UndefinedPixelTrait ? 32U : 24U;
+        sun_info.length=(unsigned int) ((image->alpha_trait !=
+          UndefinedPixelTrait ? 4 : 3)*number_pixels);
         sun_info.length+=sun_info.length & 0x01 ? (unsigned int) image->rows :
           0;
       }

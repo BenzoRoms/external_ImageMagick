@@ -17,7 +17,7 @@
 %                               December 2000                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -827,7 +827,8 @@ static void ipa_device_close(wmfAPI * API)
 static void ipa_device_begin(wmfAPI * API)
 {
   char
-    comment[MagickPathExtent];
+    comment[MagickPathExtent],
+    *url;
 
   wmf_magick_t
     *ddata = WMF_MAGICK_GetData(API);
@@ -835,10 +836,12 @@ static void ipa_device_begin(wmfAPI * API)
   /* Make SVG output happy */
   (void) PushDrawingWand(WmfDrawingWand);
 
-  DrawSetViewbox(WmfDrawingWand, 0, 0, ddata->image->columns, ddata->image->rows );
+  DrawSetViewbox(WmfDrawingWand,0,0,ddata->image->columns,ddata->image->rows);
 
-  (void) FormatLocaleString(comment,MagickPathExtent,"Created by ImageMagick %s",
-    GetMagickVersion((size_t *) NULL));
+  url=GetMagickHomeURL();
+  (void) FormatLocaleString(comment,MagickPathExtent,
+    "Created by ImageMagick %s",url);
+  url=DestroyString(url);
   DrawComment(WmfDrawingWand,comment);
 
   /* Scale width and height to image */

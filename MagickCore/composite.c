@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -407,7 +407,7 @@ static MagickBooleanType CompositeOverImage(Image *image,
               Sc: source color.
               Dc: canvas color.
           */
-          if (GetPixelReadMask(image,q) == 0)
+          if (GetPixelWriteMask(image,q) == 0)
             {
               q+=GetPixelChannels(image);
               continue;
@@ -559,7 +559,7 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
   assert(image->signature == MagickCoreSignature);
   if (image->debug != MagickFalse)
     (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
-  assert(composite!= (Image *) NULL);
+  assert(composite != (Image *) NULL);
   assert(composite->signature == MagickCoreSignature);
   if (SetImageStorageClass(image,DirectClass,exception) == MagickFalse)
     return(MagickFalse);
@@ -569,9 +569,6 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
   if (IsGrayColorspace(image->colorspace) != MagickFalse)
     (void) SetImageColorspace(image,sRGBColorspace,exception);
   (void) SetImageColorspace(source_image,image->colorspace,exception);
-  if ((image->alpha_trait != UndefinedPixelTrait) &&
-      (source_image->alpha_trait == UndefinedPixelTrait))
-    (void) SetImageAlphaChannel(source_image,SetAlphaChannel,exception);
   if ((compose == OverCompositeOp) || (compose == SrcOverCompositeOp))
     {
       status=CompositeOverImage(image,source_image,clip_to_self,x_offset,
@@ -644,16 +641,18 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
               q+=GetPixelChannels(image);
               continue;
             }
-          for (i=0; i < (ssize_t) GetPixelChannels(source_image); i++)
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
           {
-            PixelChannel channel=GetPixelChannelChannel(source_image,i);
+            PixelChannel channel=GetPixelChannelChannel(image,i);
+            PixelTrait traits=GetPixelChannelTraits(image,channel);
             PixelTrait source_traits=GetPixelChannelTraits(source_image,
               channel);
-            PixelTrait traits=GetPixelChannelTraits(image,channel);
-            if ((traits == UndefinedPixelTrait) ||
-                (source_traits == UndefinedPixelTrait))
+            if (traits == UndefinedPixelTrait)
               continue;
-            SetPixelChannel(image,channel,p[i],q);
+            if (source_traits != UndefinedPixelTrait)
+              SetPixelChannel(image,channel,p[i],q);
+            else if (channel == AlphaPixelChannel)
+              SetPixelChannel(image,channel,OpaqueAlpha,q);
           }
           p+=GetPixelChannels(source_image);
           q+=GetPixelChannels(image);
@@ -1318,7 +1317,7 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
           */
           (void) GetOneVirtualPixel(source_image,x-x_offset,y-y_offset,source,
             exception);
-          if (GetPixelReadMask(image,q) == 0)
+          if (GetPixelWriteMask(image,q) == 0)
             {
               q+=GetPixelChannels(image);
               continue;
@@ -1477,7 +1476,7 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
           break;
         }
       }
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           p+=GetPixelChannels(source_image);
           q+=GetPixelChannels(image);
@@ -1510,24 +1509,8 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
         if (traits == UndefinedPixelTrait)
           continue;
         if ((source_traits == UndefinedPixelTrait) &&
-             (((compose != CopyAlphaCompositeOp) &&
-               (compose != ChangeMaskCompositeOp)) ||
-               (channel != AlphaPixelChannel)))
+            (channel != AlphaPixelChannel))
             continue;
-        /*
-          Sc: source color.
-          Dc: canvas color.
-        */
-        Sc=(MagickRealType) GetPixelChannel(source_image,channel,p);
-        Dc=(MagickRealType) q[i];
-        if ((traits & CopyPixelTrait) != 0)
-          {
-            /*
-              Copy channel.
-            */
-            q[i]=Sc;
-            continue;
-          }
         if (channel == AlphaPixelChannel)
           {
             /*
@@ -1602,7 +1585,7 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
               }
               case CopyAlphaCompositeOp:
               {
-                if ((source_traits & BlendPixelTrait) == 0)
+                if (source_image->alpha_trait == UndefinedPixelTrait)
                   pixel=GetPixelIntensity(source_image,p);
                 else
                   pixel=QuantumRange*Sa;
@@ -1643,6 +1626,20 @@ MagickExport MagickBooleanType CompositeImage(Image *image,
             }
             q[i]=clamp != MagickFalse ? ClampPixel(pixel) :
               ClampToQuantum(pixel);
+            continue;
+          }
+        /*
+          Sc: source color.
+          Dc: canvas color.
+        */
+        Sc=(MagickRealType) GetPixelChannel(source_image,channel,p);
+        Dc=(MagickRealType) q[i];
+        if ((traits & CopyPixelTrait) != 0)
+          {
+            /*
+              Copy channel.
+            */
+            q[i]=Sc;
             continue;
           }
         /*
@@ -2482,7 +2479,7 @@ MagickExport MagickBooleanType TextureImage(Image *image,const Image *texture,
         register ssize_t
           i;
 
-        if (GetPixelReadMask(image,q) == 0)
+        if (GetPixelWriteMask(image,q) == 0)
           {
             p+=GetPixelChannels(texture_image);
             q+=GetPixelChannels(image);

@@ -1,5 +1,5 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
   
   You may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #define MaximumNumberOfImageMoments  8
+#define MaximumNumberOfPerceptualColorspaces  6
 #define MaximumNumberOfPerceptualHashes  7
 
 typedef struct _ChannelStatistics
@@ -49,7 +50,7 @@ typedef struct _ChannelStatistics
 typedef struct _ChannelMoments
 {
   double
-     invariant[MaximumNumberOfImageMoments+1];
+    invariant[MaximumNumberOfImageMoments+1];
 
   PointInfo
     centroid,
@@ -66,6 +67,18 @@ typedef struct _ChannelPerceptualHash
   double
     srgb_hu_phash[MaximumNumberOfImageMoments+1],
     hclp_hu_phash[MaximumNumberOfImageMoments+1];
+
+  size_t
+    number_colorspaces;
+
+  ColorspaceType
+    colorspace[MaximumNumberOfPerceptualColorspaces+1];
+
+  double
+    phash[MaximumNumberOfPerceptualColorspaces+1][MaximumNumberOfImageMoments+1];
+
+  size_t
+    number_channels;
 } ChannelPerceptualHash;
 
 typedef enum

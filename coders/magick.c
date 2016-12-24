@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -13288,7 +13288,7 @@ static MagickBooleanType WriteMAGICKImage(const ImageInfo *image_info,
   (void) DestroyImageInfo(write_info);
   (void) WriteBlobString(image,buffer);
   (void) WriteBlobString(image,"*/\n");
-  (void) WriteBlobString(image,"static unsigned char\n");
+  (void) WriteBlobString(image,"static const unsigned char\n");
   (void) WriteBlobString(image,"  MagickImage[] =\n");
   (void) WriteBlobString(image,"  {\n");
   (void) WriteBlobString(image,"    ");

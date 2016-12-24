@@ -16,7 +16,7 @@
 %                                 June 2000                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -589,9 +589,15 @@ static int UnpackWPG2Raster(Image *image,int bpp,ExceptionInfo *exception)
         case 0x7D:
           SampleSize=ReadBlobByte(image);  /* DSZ */
           if(SampleSize>8)
-            return(-2);
+            {
+              BImgBuff=(unsigned char *) RelinquishMagickMemory(BImgBuff);
+              return(-2);
+            }
           if(SampleSize<1)
-            return(-2);
+            {
+              BImgBuff=(unsigned char *) RelinquishMagickMemory(BImgBuff);
+              return(-2);
+            }
           break;
         case 0x7E:
           (void) FormatLocaleFile(stderr,
@@ -624,6 +630,7 @@ static int UnpackWPG2Raster(Image *image,int bpp,ExceptionInfo *exception)
               (void) FormatLocaleFile(stderr,
                 "\nUnsupported WPG2 unaligned token RST x=%.20g, please report!\n"
                 ,(double) x);
+              BImgBuff=(unsigned char *) RelinquishMagickMemory(BImgBuff);
               return(-3);
             }
           {
@@ -1013,6 +1020,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
   image->colors = 0;
   bpp=0;
   BitmapHeader2.RotAngle=0;
+  Rec2.RecordLength=0;
 
   switch(Header.FileType)
     {
@@ -1058,7 +1066,9 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
             case 0x0E:  /*Color palette */
               WPG_Palette.StartIndex=ReadBlobLSBShort(image);
               WPG_Palette.NumOfEntries=ReadBlobLSBShort(image);
-
+              if ((WPG_Palette.NumOfEntries-WPG_Palette.StartIndex) >
+                  (Rec2.RecordLength-2-2) / 3)
+                ThrowReaderException(CorruptImageError,"InvalidColormapIndex");
               image->colors=WPG_Palette.NumOfEntries;
               if (!AcquireImageColormap(image,image->colors,exception))
                 goto NoMemory;
@@ -1174,8 +1184,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
                       flop_image = FlopImage(image, exception);
                       if (flop_image != (Image *) NULL) {
                         DuplicateBlob(flop_image,image);
-                        (void) RemoveLastImageFromList(&image);
-                        AppendImageToList(&image,flop_image);
+                        ReplaceImageInList(&image,flop_image);
                       }
                     }
                   /* flip command */
@@ -1187,8 +1196,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
                       flip_image = FlipImage(image, exception);
                       if (flip_image != (Image *) NULL) {
                         DuplicateBlob(flip_image,image);
-                        (void) RemoveLastImageFromList(&image);
-                        AppendImageToList(&image,flip_image);
+                        ReplaceImageInList(&image,flip_image);
                       }
                     }
                   /* rotate command */
@@ -1201,8 +1209,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
                         0x0FFF), exception);
                       if (rotate_image != (Image *) NULL) {
                         DuplicateBlob(rotate_image,image);
-                        (void) RemoveLastImageFromList(&image);
-                        AppendImageToList(&image,rotate_image);
+                        ReplaceImageInList(&image,rotate_image);
                       }
                     }
                 }
@@ -1259,7 +1266,9 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
             case 0x0C:    /* Color palette */
               WPG_Palette.StartIndex=ReadBlobLSBShort(image);
               WPG_Palette.NumOfEntries=ReadBlobLSBShort(image);
-
+              if ((WPG_Palette.NumOfEntries-WPG_Palette.StartIndex) >
+                  (Rec2.RecordLength-2-2) / 3)
+                ThrowReaderException(CorruptImageError,"InvalidColormapIndex");
               image->colors=WPG_Palette.NumOfEntries;
               if (AcquireImageColormap(image,image->colors,exception) == MagickFalse)
                 ThrowReaderException(ResourceLimitError,
@@ -1367,8 +1376,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
                   flop_image = FlopImage(image, exception);
                   if (flop_image != (Image *) NULL) {
                     DuplicateBlob(flop_image,image);
-                    (void) RemoveLastImageFromList(&image);
-                    AppendImageToList(&image,flop_image);
+                    ReplaceImageInList(&image,flop_image);
                   }
                   /* Try to change CTM according to Flip - I am not sure, must be checked.
                      Tx(0,0)=-1;      Tx(1,0)=0;   Tx(2,0)=0;
@@ -1384,8 +1392,7 @@ static Image *ReadWPGImage(const ImageInfo *image_info,
                    flip_image = FlipImage(image, exception);
                    if (flip_image != (Image *) NULL) {
                      DuplicateBlob(flip_image,image);
-                     (void) RemoveLastImageFromList(&image);
-                     AppendImageToList(&image,flip_image);
+                     ReplaceImageInList(&image,flip_image);
                     }
                   /* Try to change CTM according to Flip - I am not sure, must be checked.
                      float_matrix Tx(3,3);

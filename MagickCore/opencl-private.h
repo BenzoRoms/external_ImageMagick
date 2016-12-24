@@ -1,5 +1,5 @@
 /*
-Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
 dedicated to making software imaging solutions freely available.
 
 You may not use this file except in compliance with the License.
@@ -234,6 +234,8 @@ typedef struct MagickLibraryRec MagickLibrary;
 
 struct MagickLibraryRec
 {
+  void *library;
+
   MAGICKpfn_clGetPlatformIDs          clGetPlatformIDs;
   MAGICKpfn_clGetPlatformInfo         clGetPlatformInfo;
 
@@ -323,6 +325,9 @@ struct _MagickCLDevice
 
   ssize_t
     command_queues_index;
+
+  char
+    *vendor_name;
 };
 
 typedef struct _MagickCLEnv
@@ -400,7 +405,7 @@ extern MagickPrivate cl_command_queue
   AcquireOpenCLCommandQueue(MagickCLDevice);
 
 extern MagickPrivate cl_int
-  SetOpenCLKernelArg(cl_kernel,cl_uint,size_t,const void *);
+  SetOpenCLKernelArg(cl_kernel,size_t,size_t,const void *);
 
 extern MagickPrivate cl_kernel
   AcquireOpenCLKernel(MagickCLDevice,const char *);
@@ -410,7 +415,8 @@ extern MagickPrivate cl_mem
 
 extern MagickPrivate MagickBooleanType
   EnqueueOpenCLKernel(cl_command_queue,cl_kernel,cl_uint,const size_t *,
-    const size_t *,const size_t *,const Image *,const Image *,ExceptionInfo *),
+    const size_t *,const size_t *,const Image *,const Image *,
+    MagickBooleanType,ExceptionInfo *),
   InitializeOpenCL(MagickCLEnv,ExceptionInfo *),
   OpenCLThrowMagickException(MagickCLDevice,ExceptionInfo *,
     const char *,const char *,const size_t,const ExceptionType,const char *,

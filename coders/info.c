@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -96,8 +96,7 @@ ModuleExport size_t RegisterINFOImage(void)
   MagickInfo
     *entry;
 
-  entry=AcquireMagickInfo("INFO","INFO",
-    "The image format and characteristics");
+  entry=AcquireMagickInfo("INFO","INFO","The image format and characteristics");
   entry->encoder=(EncodeImageHandler *) WriteINFOImage;
   entry->flags^=CoderBlobSupportFlag;
   (void) RegisterMagickInfo(entry);

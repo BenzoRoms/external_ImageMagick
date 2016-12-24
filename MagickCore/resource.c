@@ -17,7 +17,7 @@
 %                               September 2002                                %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -433,7 +433,10 @@ MagickExport MagickBooleanType GetPathTemplate(char *path)
     return(MagickTrue);
   value=GetPolicyValue("temporary-path");
   if (value != (char *) NULL)
-    (void) CloneString(&directory,value);
+    {
+      (void) CloneString(&directory,value);
+      value=DestroyString(value);
+    }
   if (strlen(directory) > (MagickPathExtent-25))
     {
       directory=DestroyString(directory);

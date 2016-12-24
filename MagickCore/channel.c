@@ -17,7 +17,7 @@
 %                               December 2003                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -507,8 +507,30 @@ MagickExport Image *CombineImages(const Image *image,
     (void) SetImageColorspace(combine_image,sRGBColorspace,exception);
   else
     (void) SetImageColorspace(combine_image,colorspace,exception);
-  if ((GetPixelAlphaTraits(image) & UpdatePixelTrait) != 0)
-    combine_image->alpha_trait=BlendPixelTrait;
+  switch (combine_image->colorspace)
+  {
+    case UndefinedColorspace:
+    case sRGBColorspace:
+    { 
+      if (GetImageListLength(image) > 3)
+        combine_image->alpha_trait=BlendPixelTrait;
+      break;
+    }
+    case GRAYColorspace:
+    {
+      if (GetImageListLength(image) > 1)
+        combine_image->alpha_trait=BlendPixelTrait;
+      break;
+    }
+    case CMYKColorspace:
+    { 
+      if (GetImageListLength(image) > 4)
+        combine_image->alpha_trait=BlendPixelTrait;
+      break;
+    }
+    default:
+      break;
+  }
   /*
     Combine images.
   */
@@ -732,7 +754,7 @@ MagickExport Image *SeparateImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(separate_image,q);
           p+=GetPixelChannels(image);
@@ -987,7 +1009,7 @@ MagickExport MagickBooleanType SetImageAlphaChannel(Image *image,
           register ssize_t
             i;
   
-          if (GetPixelReadMask(image,q) == 0)
+          if (GetPixelWriteMask(image,q) == 0)
             {
               q+=GetPixelChannels(image);
               continue;
@@ -1120,7 +1142,7 @@ MagickExport MagickBooleanType SetImageAlphaChannel(Image *image,
           register ssize_t
             i;
 
-          if (GetPixelReadMask(image,q) == 0)
+          if (GetPixelWriteMask(image,q) == 0)
             {
               q+=GetPixelChannels(image);
               continue;

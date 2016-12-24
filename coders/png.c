@@ -18,7 +18,7 @@
 %                               November 1997                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -10350,14 +10350,14 @@ static MagickBooleanType WriteOnePNGImage(MngInfo *mng_info,
 
   if (logging != MagickFalse)
     {
-     if (mng_info->write_png_compression_level)
-        (void) LogMagickEvent(CoderEvent,GetMagickModule(),
-          "    Compression level:    %d",
+        if (mng_info->write_png_compression_level)
+          (void) LogMagickEvent(CoderEvent,GetMagickModule(),
+            "    Compression level:    %d",
             (int) mng_info->write_png_compression_level-1);
 
-     if (mng_info->write_png_compression_strategy)
-        (void) LogMagickEvent(CoderEvent,GetMagickModule(),
-          "    Compression strategy: %d",
+        if (mng_info->write_png_compression_strategy)
+          (void) LogMagickEvent(CoderEvent,GetMagickModule(),
+            "    Compression strategy: %d",
             (int) mng_info->write_png_compression_strategy-1);
 
         (void) LogMagickEvent(CoderEvent,GetMagickModule(),

@@ -1,5 +1,5 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
 
   You may not use this file except in compliance with the License.
@@ -536,6 +536,8 @@ extern MagickExport MagickBooleanType
   SetImageExtent(Image *,const size_t,const size_t,ExceptionInfo *),
   SetImageInfo(ImageInfo *,const unsigned int,ExceptionInfo *),
   SetImageMask(Image *,const PixelMask type,const Image *,ExceptionInfo *),
+  SetImageRegionMask(Image *,const PixelMask type,const RectangleInfo *,
+    ExceptionInfo *),
   SetImageStorageClass(Image *,const ClassType,ExceptionInfo *),
   StripImage(Image *,ExceptionInfo *),
   SyncImage(Image *,ExceptionInfo *),

@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -409,17 +409,17 @@ WandExport MagickBooleanType MontageImageCommand(ImageInfo *image_info,
           else
             {
               char
-                filename[MagickPathExtent];
+                scene_filename[MagickPathExtent];
 
               /*
                 Form filename for multi-part images.
               */
               (void) InterpretImageFilename(image_info,(Image *) NULL,
-                image_info->filename,(int) scene,filename,exception);
+                image_info->filename,(int) scene,scene_filename,exception);
               if (LocaleCompare(filename,image_info->filename) == 0)
-                (void) FormatLocaleString(filename,MagickPathExtent,"%s.%.20g",
-                  image_info->filename,(double) scene);
-              images=ReadImages(image_info,filename,exception);
+                (void) FormatLocaleString(scene_filename,MagickPathExtent,
+                  "%s.%.20g",image_info->filename,(double) scene);
+              images=ReadImages(image_info,scene_filename,exception);
             }
           status&=(images != (Image *) NULL) &&
             (exception->severity < ErrorException);

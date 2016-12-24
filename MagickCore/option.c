@@ -17,7 +17,7 @@
 %                                 March 2000                                  %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -166,6 +166,12 @@ static const OptionInfo
     { "Saturation", GreenChannel, UndefinedOptionFlag, MagickFalse },
     { "Y", YellowChannel, UndefinedOptionFlag, MagickFalse },
     { "Yellow", YellowChannel, UndefinedOptionFlag, MagickFalse },
+    { "0", 0, UndefinedOptionFlag, MagickFalse },
+    { "1", 1, UndefinedOptionFlag, MagickFalse },
+    { "2", 2, UndefinedOptionFlag, MagickFalse },
+    { "3", 3, UndefinedOptionFlag, MagickFalse },
+    { "4", 4, UndefinedOptionFlag, MagickFalse },
+    { "5", 5, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedChannel, UndefinedOptionFlag, MagickFalse }
   },
   ClassOptions[] =
@@ -659,8 +665,8 @@ static const OptionInfo
     { "-recolor", 1L, ReplacedOptionFlag | SimpleOperatorFlag, MagickTrue },
     { "+red-primary", 0L, ImageInfoOptionFlag, MagickFalse },
     { "-red-primary", 1L, ImageInfoOptionFlag, MagickFalse },
-    { "+region", 0L, NoImageOperatorFlag, MagickFalse },
-    { "-region", 1L, NoImageOperatorFlag, MagickFalse },
+    { "+region", 0L, SimpleOperatorFlag, MagickFalse },
+    { "-region", 1L, SimpleOperatorFlag, MagickFalse },
     { "+remap", 0L, ListOperatorFlag | NeverInterpretArgsFlag | FireOptionFlag, MagickFalse },
     { "-remap", 1L, SimpleOperatorFlag | NeverInterpretArgsFlag, MagickFalse },
     { "+remote", 0L, NonMagickOptionFlag, MagickFalse },
@@ -1394,7 +1400,7 @@ static const OptionInfo
     { "MSE", MeanSquaredErrorMetric, UndefinedOptionFlag, MagickFalse },
     { "NCC", NormalizedCrossCorrelationErrorMetric, UndefinedOptionFlag, MagickFalse },
     { "PAE", PeakAbsoluteErrorMetric, UndefinedOptionFlag, MagickFalse },
-    { "PHASh", PerceptualHashErrorMetric, UndefinedOptionFlag, MagickFalse },
+    { "PHASH", PerceptualHashErrorMetric, UndefinedOptionFlag, MagickFalse },
     { "PSNR", PeakSignalToNoiseRatioErrorMetric, UndefinedOptionFlag, MagickFalse },
     { "RMSE", RootMeanSquaredErrorMetric, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedErrorMetric, UndefinedOptionFlag, MagickFalse }

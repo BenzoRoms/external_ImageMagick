@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -268,7 +268,7 @@ static Image *MaskImage(const Image *image,ExceptionInfo *exception)
     for (x=0; x < (ssize_t) image->columns; x++)
     {
       SetPixelChannel(mask_image,GrayPixelChannel,0,q);
-      SetPixelChannel(mask_image,GrayPixelChannel,GetPixelReadMask(image,p),q);
+      SetPixelChannel(mask_image,GrayPixelChannel,GetPixelWriteMask(image,p),q);
       p+=GetPixelChannels(image);
       q+=GetPixelChannels(mask_image);
     }

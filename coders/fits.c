@@ -17,7 +17,7 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -435,7 +435,8 @@ static Image *ReadFITSImage(const ImageInfo *image_info,
     (void) SetImageColorspace(image,GRAYColorspace,exception);
     if ((fits_info.min_data == 0.0) && (fits_info.max_data == 0.0))
       {
-        if (fits_info.zero == 0.0)
+        if ((fits_info.bits_per_pixel == -32) ||
+            (fits_info.bits_per_pixel == -64))
           (void) GetFITSPixelExtrema(image,fits_info.bits_per_pixel,
             &fits_info.min_data,&fits_info.max_data);
         else
@@ -610,8 +611,9 @@ static MagickBooleanType WriteFITSImage(const ImageInfo *image_info,
   Image *image,ExceptionInfo *exception)
 {
   char
+    *fits_info,
     header[FITSBlocksize],
-    *fits_info;
+    *url;
 
   MagickBooleanType
     status;
@@ -712,8 +714,9 @@ static MagickBooleanType WriteFITSImage(const ImageInfo *image_info,
       (void) strncpy(fits_info+offset,header,strlen(header));
       offset+=80;
     }
-  (void) FormatLocaleString(header,FITSBlocksize,"HISTORY %.72s",
-    GetMagickVersion((size_t *) NULL));
+  url=GetMagickHomeURL();
+  (void) FormatLocaleString(header,FITSBlocksize,"HISTORY %.72s",url);
+  url=DestroyString(url);
   (void) strncpy(fits_info+offset,header,strlen(header));
   offset+=80;
   (void) strncpy(header,"END",FITSBlocksize);

@@ -17,7 +17,7 @@
 %                              January 1993                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -1568,14 +1568,12 @@ static int FileCompare(const void *x,const void *y)
 static inline int MagickReadDirectory(DIR *directory,struct dirent *entry,
   struct dirent **result)
 {
-#if defined(MAGICKCORE_HAVE_READDIR_R)
-  return(readdir_r(directory,entry,result));
-#else
-  (void) entry;
   errno=0;
-  *result=readdir(directory);
-  return(errno);
-#endif
+  entry=readdir(directory);
+  *result=entry;
+  if ((entry == (struct dirent *) NULL) && (errno != 0))
+    return(-1);
+  return(0);
 }
 
 MagickPrivate char **ListFiles(const char *directory,const char *pattern,

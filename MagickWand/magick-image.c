@@ -23,7 +23,7 @@
 %                                 August 2003                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -11711,13 +11711,18 @@ WandExport MagickBooleanType MagickThresholdImageChannel(MagickWand *wand,
   MagickBooleanType
     status;
 
+  ChannelType
+    channel_mask;
+
   assert(wand != (MagickWand *) NULL);
   assert(wand->signature == MagickWandSignature);
   if (wand->debug != MagickFalse)
     (void) LogMagickEvent(WandEvent,GetMagickModule(),"%s",wand->name);
   if (wand->images == (Image *) NULL)
     ThrowWandException(WandError,"ContainsNoImages",wand->name);
+  channel_mask=SetImageChannelMask(wand->images,channel);
   status=BilevelImage(wand->images,threshold,wand->exception);
+  (void) SetImageChannelMask(wand->images,channel_mask);
   return(status);
 }
 

@@ -156,6 +156,9 @@ static volatile MagickBooleanType
 static SemaphoreInfo
   *cache_semaphore = (SemaphoreInfo *) NULL;
 
+static ssize_t
+  cache_anonymous_memory = (-1);
+
 static time_t
   cache_epoch = 0;
 
@@ -3397,7 +3400,7 @@ static MagickBooleanType SetPixelCacheExtent(Image *image,MagickSizeType length)
   offset=(MagickOffsetType) lseek(cache_info->file,0,SEEK_SET);
   if (offset < 0)
     return(MagickFalse);
-  return(count != (MagickOffsetType) 1 ? MagickFalse : MagickTrue);
+  return(MagickTrue);
 }
 
 static MagickBooleanType OpenPixelCache(Image *image,const MapMode mode,
@@ -3430,6 +3433,28 @@ static MagickBooleanType OpenPixelCache(Image *image,const MapMode mode,
   assert(image->cache != (Cache) NULL);
   if (image->debug != MagickFalse)
     (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
+  if (cache_anonymous_memory < 0)
+    {
+      char
+        *value;
+
+      /*
+        Does the security policy require anonymous mapping for pixel cache?
+      */
+      cache_anonymous_memory=0;
+      value=GetPolicyValue("pixel-cache-memory");
+      if (LocaleCompare(value,"anonymous") == 0)
+        {
+#if defined(MAGICKCORE_HAVE_MMAP) && defined(MAP_ANONYMOUS)
+          cache_anonymous_memory=1;
+#else
+          (void) ThrowMagickException(exception,GetMagickModule(),
+            MissingDelegateError,"DelegateLibrarySupportNotBuiltIn",
+            "'%s' (policy requires anonymous memory mapping)",image->filename);
+#endif
+        }
+      value=DestroyString(value);
+    }
   if ((image->columns == 0) || (image->rows == 0))
     ThrowBinaryException(CacheError,"NoPixelsDefinedInCache",image->filename);
   cache_info=(CacheInfo *) image->cache;
@@ -3483,9 +3508,18 @@ static MagickBooleanType OpenPixelCache(Image *image,const MapMode mode,
           (cache_info->type == MemoryCache))
         {
           status=MagickTrue;
-          cache_info->mapped=MagickFalse;
-          cache_info->pixels=(Quantum *) MagickAssumeAligned(
-            AcquireAlignedMemory(1,(size_t) cache_info->length));
+          if (cache_anonymous_memory <= 0)
+            {
+              cache_info->mapped=MagickFalse;
+              cache_info->pixels=(Quantum *) MagickAssumeAligned(
+                AcquireAlignedMemory(1,(size_t) cache_info->length));
+            }
+          else
+            {
+              cache_info->mapped=MagickTrue;
+              cache_info->pixels=(Quantum *) MapBlob(-1,IOMode,0,(size_t)
+                cache_info->length);
+            }
           if (cache_info->pixels == (Quantum *) NULL)
             cache_info->pixels=source_info.pixels;
           else
@@ -4668,10 +4702,15 @@ static inline MagickBooleanType AcquireCacheNexusPixels(
 {
   if (nexus_info->length != (MagickSizeType) ((size_t) nexus_info->length))
     return(MagickFalse);
-  nexus_info->mapped=MagickFalse;
-  nexus_info->cache=(Quantum *) MagickAssumeAligned(AcquireAlignedMemory(1,
-    (size_t) nexus_info->length));
-  if (nexus_info->cache == (Quantum *) NULL)
+  if (cache_anonymous_memory <= 0)
+    {
+      nexus_info->mapped=MagickFalse;
+      nexus_info->cache=(Quantum *) MagickAssumeAligned(AcquireAlignedMemory(1,
+        (size_t) nexus_info->length));
+      if (nexus_info->cache != (Quantum *) NULL)
+        ResetMagickMemory(nexus_info->cache,0,(size_t) nexus_info->length);
+    }
+  else
     {
       nexus_info->mapped=MagickTrue;
       nexus_info->cache=(Quantum *) MapBlob(-1,IOMode,0,(size_t)
@@ -4964,6 +5003,7 @@ MagickPrivate VirtualPixelMethod SetPixelCacheVirtualMethod(Image *image,
 %    o image: the image.
 %
 */
+
 static void CopyOpenCLBuffer(CacheInfo *magick_restrict cache_info)
 {
   assert(cache_info != (CacheInfo *) NULL);

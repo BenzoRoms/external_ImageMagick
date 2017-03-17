@@ -523,11 +523,6 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
     (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
   if (file == (FILE *) NULL)
     file=stdout;
-  colorspace=image->colorspace;
-  type=IdentifyImageType(image,exception);
-  if ((type == BilevelType) || (type == GrayscaleType) ||
-      (type == GrayscaleAlphaType))
-    colorspace=GRAYColorspace;
   locate=GetImageArtifact(image,"identify:locate");
   if (locate != (const char *) NULL)
     {
@@ -538,56 +533,68 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
         max_locations;
 
       StatisticType
-        type;
+        statistic_type;
 
       /*
         Display minimum, maximum, or mean pixel locations.
       */
-      type=(StatisticType) ParseCommandOption(MagickStatisticOptions,
+      statistic_type=(StatisticType) ParseCommandOption(MagickStatisticOptions,
         MagickFalse,locate);
       limit=GetImageArtifact(image,"identify:limit");
       max_locations=0;
       if (limit != (const char *) NULL)
         max_locations=StringToUnsignedLong(limit);
-      channel_statistics=GetLocationStatistics(image,type,exception);
+      channel_statistics=GetLocationStatistics(image,statistic_type,exception);
       if (channel_statistics == (ChannelStatistics *) NULL)
         return(MagickFalse);
       (void) FormatLocaleFile(file,"Channel %s locations:\n",locate);
+      colorspace=image->colorspace;
+      type=IdentifyImageType(image,exception);
+      if ((type == BilevelType) || (type == GrayscaleType) ||
+          (type == GrayscaleAlphaType))
+        colorspace=GRAYColorspace;
       switch (colorspace)
       {
         case RGBColorspace:
-        default:
+        case sRGBColorspace:
         {
           (void) PrintChannelLocations(file,image,RedPixelChannel,"Red",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           (void) PrintChannelLocations(file,image,GreenPixelChannel,"Green",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           (void) PrintChannelLocations(file,image,BluePixelChannel,"Blue",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           break;
         }
         case CMYKColorspace:
         {
           (void) PrintChannelLocations(file,image,CyanPixelChannel,"Cyan",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           (void) PrintChannelLocations(file,image,MagentaPixelChannel,"Magenta",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           (void) PrintChannelLocations(file,image,YellowPixelChannel,"Yellow",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           (void) PrintChannelLocations(file,image,BlackPixelChannel,"Black",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
           break;
         }
         case GRAYColorspace:
         {
           (void) PrintChannelLocations(file,image,GrayPixelChannel,"Gray",
-            type,max_locations,channel_statistics);
+            statistic_type,max_locations,channel_statistics);
+          break;
+        }
+        default:
+        {
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+            (void) PrintChannelLocations(file,image,(PixelChannel) i,"Gray",
+              statistic_type,max_locations,channel_statistics);
           break;
         }
       }
       if (image->alpha_trait != UndefinedPixelTrait)
         (void) PrintChannelLocations(file,image,AlphaPixelChannel,"Alpha",
-          type,max_locations,channel_statistics);
+          statistic_type,max_locations,channel_statistics);
       channel_statistics=(ChannelStatistics *) RelinquishMagickMemory(
         channel_statistics);
       return(ferror(file) != 0 ? MagickFalse : MagickTrue);
@@ -669,6 +676,11 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
   /*
     Display verbose info about the image.
   */
+  colorspace=image->colorspace;
+  type=IdentifyImageType(image,exception);
+  if ((type == BilevelType) || (type == GrayscaleType) ||
+      (type == GrayscaleAlphaType))
+    colorspace=GRAYColorspace;
   p=GetVirtualPixels(image,0,0,1,1,exception);
   ping=p == (const Quantum *) NULL ? MagickTrue : MagickFalse;
   (void) SignatureImage(image,exception);
@@ -762,7 +774,7 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       switch (colorspace)
       {
         case RGBColorspace:
-        default:
+        case sRGBColorspace:
         {
           (void) FormatLocaleFile(file,"    Red: %.20g-bit\n",(double)
             channel_statistics[RedPixelChannel].depth);
@@ -790,6 +802,13 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
             channel_statistics[GrayPixelChannel].depth);
           break;
         }
+        default:
+        {
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+            (void) FormatLocaleFile(file,"    Channel %.20g: %.20g-bit\n",
+              (double) i,(double) channel_statistics[i].depth);
+          break;
+        }
       }
       if (image->alpha_trait != UndefinedPixelTrait)
         (void) FormatLocaleFile(file,"    Alpha: %.20g-bit\n",(double)
@@ -807,7 +826,7 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       switch (colorspace)
       {
         case RGBColorspace:
-        default:
+        case sRGBColorspace:
         {
           (void) PrintChannelStatistics(file,RedPixelChannel,"Red",1.0/
             scale,channel_statistics);
@@ -835,6 +854,20 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
             scale,channel_statistics);
           break;
         }
+        default:
+        {
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+          {
+            char
+              channel[MagickPathExtent];
+
+            (void) FormatLocaleString(channel,MagickPathExtent,"Channel %.20g",
+              (double) i);
+            (void) PrintChannelStatistics(file,(PixelChannel) i,channel,1.0/
+              scale,channel_statistics);
+          }
+          break;
+        }
       }
       if (image->alpha_trait != UndefinedPixelTrait)
         (void) PrintChannelStatistics(file,AlphaPixelChannel,"Alpha",1.0/
@@ -842,8 +875,8 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       if (colorspace != GRAYColorspace)
         {
           (void) FormatLocaleFile(file,"  Image statistics:\n");
-          (void) PrintChannelStatistics(file,(PixelChannel) MaxPixelChannels,
-            "Overall",1.0/scale,channel_statistics);
+          (void) PrintChannelStatistics(file,CompositePixelChannel,"Overall",
+            1.0/scale,channel_statistics);
         }
       channel_statistics=(ChannelStatistics *) RelinquishMagickMemory(
         channel_statistics);
@@ -855,7 +888,7 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       switch (colorspace)
       {
         case RGBColorspace:
-        default:
+        case sRGBColorspace:
         {
           (void) PrintChannelMoments(file,RedPixelChannel,"Red",scale,
             channel_moments);
@@ -883,6 +916,20 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
             channel_moments);
           break;
         }
+        default:
+        {
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+          {
+            char
+              channel[MagickPathExtent];
+
+            (void) FormatLocaleString(channel,MagickPathExtent,"Channel %.20g",
+              (double) i);
+            (void) PrintChannelMoments(file,(PixelChannel) i,"channel",scale,
+              channel_moments);
+          }
+          break;
+        }
       }
       if (image->alpha_trait != UndefinedPixelTrait)
         (void) PrintChannelMoments(file,AlphaPixelChannel,"Alpha",scale,
@@ -890,8 +937,8 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       if (colorspace != GRAYColorspace)
         {
           (void) FormatLocaleFile(file,"  Image moments:\n");
-          (void) PrintChannelMoments(file,(PixelChannel) MaxPixelChannels,
-            "Overall",scale,channel_moments);
+          (void) PrintChannelMoments(file,CompositePixelChannel,"Overall",scale,
+            channel_moments);
         }
       channel_moments=(ChannelMoments *) RelinquishMagickMemory(
         channel_moments);
@@ -909,7 +956,7 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
       switch (colorspace)
       {
         case RGBColorspace:
-        default:
+        case sRGBColorspace:
         {
           (void) PrintChannelFeatures(file,RedPixelChannel,"Red",
             channel_features);
@@ -935,6 +982,20 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
         {
           (void) PrintChannelFeatures(file,GrayPixelChannel,"Gray",
             channel_features);
+          break;
+        }
+        default:
+        {
+          for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+          {
+            char
+              channel[MagickPathExtent];
+
+            (void) FormatLocaleString(channel,MagickPathExtent,"Channel %.20g",
+              (double) i);
+            (void) PrintChannelFeatures(file,(PixelChannel) i,channel,
+              channel_features);
+          }
           break;
         }
       }
@@ -1094,9 +1155,9 @@ MagickExport MagickBooleanType IdentifyImage(Image *image,FILE *file,
     (void) FormatLocaleFile(file,"  Tile geometry: %.20gx%.20g%+.20g%+.20g\n",
       (double) image->extract_info.width,(double) image->extract_info.height,
       (double) image->extract_info.x,(double) image->extract_info.y);
-  (void) QueryColorname(image,&image->alpha_color,SVGCompliance,color,
+  (void) QueryColorname(image,&image->matte_color,SVGCompliance,color,
     exception);
-  (void) FormatLocaleFile(file,"  Alpha color: %s\n",color);
+  (void) FormatLocaleFile(file,"  Matte color: %s\n",color);
   (void) QueryColorname(image,&image->background_color,SVGCompliance,color,
     exception);
   (void) FormatLocaleFile(file,"  Background color: %s\n",color);

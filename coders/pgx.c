@@ -3,18 +3,18 @@
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%                            M   M  V   V   GGGG                              %
-%                            MM MM  V   V  G                                  %
-%                            M M M  V   V  G GG                               %
-%                            M   M   V V   G   G                              %
-%                            M   M    V     GGG                               %
+%                            PPPP    GGGG  X   X                              %
+%                            P   P  G       X X                               %
+%                            PPPP   G  GG    X                                %
+%                            P      G   G   X X                               %
+%                            P       GGG   X   X                              %
 %                                                                             %
 %                                                                             %
-%                 Read/Write Magick Vector Graphics Metafiles.                %
+%                           PGX JPEG 2000 Format                              %
 %                                                                             %
 %                              Software Design                                %
 %                                   Cristy                                    %
-%                                 April 2000                                  %
+%                                 July 2016                                   %
 %                                                                             %
 %                                                                             %
 %  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
@@ -40,10 +40,14 @@
   Include declarations.
 */
 #include "MagickCore/studio.h"
-#include "MagickCore/artifact.h"
+#include "MagickCore/attribute.h"
 #include "MagickCore/blob.h"
 #include "MagickCore/blob-private.h"
-#include "MagickCore/draw.h"
+#include "MagickCore/cache.h"
+#include "MagickCore/color-private.h"
+#include "MagickCore/colormap.h"
+#include "MagickCore/colorspace.h"
+#include "MagickCore/colorspace-private.h"
 #include "MagickCore/exception.h"
 #include "MagickCore/exception-private.h"
 #include "MagickCore/image.h"
@@ -51,35 +55,36 @@
 #include "MagickCore/list.h"
 #include "MagickCore/magick.h"
 #include "MagickCore/memory_.h"
-#include "MagickCore/module.h"
-#include "MagickCore/property.h"
+#include "MagickCore/monitor.h"
+#include "MagickCore/monitor-private.h"
 #include "MagickCore/quantum-private.h"
 #include "MagickCore/static.h"
 #include "MagickCore/string_.h"
+#include "MagickCore/module.h"
 
 /*
   Forward declarations.
 */
 static MagickBooleanType
-  WriteMVGImage(const ImageInfo *,Image *,ExceptionInfo *);
+  WritePGXImage(const ImageInfo *,Image *,ExceptionInfo *);
 
 /*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%   I s M V G                                                                 %
+%   I s P G X                                                                 %
 %                                                                             %
 %                                                                             %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  IsMVG() returns MagickTrue if the image format type, identified by the
-%  magick string, is MVG.
+%  IsPGXreturns True if the image format type, identified by the magick
+%  string, is PGX.
 %
-%  The format of the IsMVG method is:
+%  The format of the IsPGX method is:
 %
-%      MagickBooleanType IsMVG(const unsigned char *magick,const size_t length)
+%      unsigned int IsPGX(const unsigned char *magick,const size_t length)
 %
 %  A description of each parameter follows:
 %
@@ -88,11 +93,11 @@ static MagickBooleanType
 %    o length: Specifies the length of the magick string.
 %
 */
-static MagickBooleanType IsMVG(const unsigned char *magick,const size_t length)
+static unsigned int IsPGX(const unsigned char *magick,const size_t length)
 {
-  if (length < 20)
+  if (length < 5)
     return(MagickFalse);
-  if (LocaleNCompare((const char *) magick,"push graphic-context",20) == 0)
+  if ((memcmp(magick,"PG ML",5) == 0) || (memcmp(magick,"PG LM",5) == 0))
     return(MagickTrue);
   return(MagickFalse);
 }
@@ -102,20 +107,20 @@ static MagickBooleanType IsMVG(const unsigned char *magick,const size_t length)
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%   R e a d M V G I m a g e                                                   %
+%   R e a d P G X I m a g e                                                   %
 %                                                                             %
 %                                                                             %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  ReadMVGImage creates a gradient image and initializes it to
-%  the X server color range as specified by the filename.  It allocates the
-%  memory necessary for the new Image structure and returns a pointer to the
-%  new image.
+%  ReadPGXImage() reads an image of raw bits in LSB order and returns it.
+%  It allocates the memory necessary for the new Image structure and returns
+%  a pointer to the new image.
 %
-%  The format of the ReadMVGImage method is:
+%  The format of the ReadPGXImage method is:
 %
-%      Image *ReadMVGImage(const ImageInfo *image_info,ExceptionInfo *exception)
+%      Image *ReadPGXImage(const ImageInfo *image_info,
+%        ExceptionInfo *exception)
 %
 %  A description of each parameter follows:
 %
@@ -124,21 +129,40 @@ static MagickBooleanType IsMVG(const unsigned char *magick,const size_t length)
 %    o exception: return any errors or warnings in this structure.
 %
 */
-static Image *ReadMVGImage(const ImageInfo *image_info,ExceptionInfo *exception)
+static Image *ReadPGXImage(const ImageInfo *image_info,ExceptionInfo *exception)
 {
-#define BoundingBox  "viewbox"
+  char
+    buffer[MagickPathExtent],
+    endian[MagickPathExtent],
+    sans[MagickPathExtent],
+    sign[MagickPathExtent];
 
-  DrawInfo
-    *draw_info;
+  const unsigned char
+    *pixels;
 
   Image
     *image;
 
+  int
+    height,
+    precision,
+    width;
+
+  QuantumInfo
+    *quantum_info;
+
   MagickBooleanType
     status;
 
+  size_t
+    length;
+
+  ssize_t
+    count,
+    y;
+
   /*
-    Open image.
+    Open image file.
   */
   assert(image_info != (const ImageInfo *) NULL);
   assert(image_info->signature == MagickCoreSignature);
@@ -154,69 +178,57 @@ static Image *ReadMVGImage(const ImageInfo *image_info,ExceptionInfo *exception)
       image=DestroyImageList(image);
       return((Image *) NULL);
     }
+  if (ReadBlobString(image,buffer) == (char *) NULL)
+    ThrowReaderException(CorruptImageError,"ImproperImageHeader");
+  count=(ssize_t) sscanf(buffer,"PG%[ \t]%2s%[ \t+-]%d%[ \t]%d%[ \t]%d",sans,
+    endian,sign,&precision,sans,&width,sans,&height);
+  image->depth=(size_t) precision;
+  if (LocaleCompare(endian,"ML") == 0)
+    image->endian=MSBEndian;
+  image->columns=(size_t) width;
+  image->rows=(size_t) height;
   if ((image->columns == 0) || (image->rows == 0))
+    ThrowReaderException(CorruptImageError,"ImproperImageHeader");
+  if (image_info->ping != MagickFalse)
     {
-      char
-        primitive[MagickPathExtent];
-
-      register char
-        *p;
-
-      SegmentInfo
-        bounds;
-
-      /*
-        Determine size of image canvas.
-      */
-      while (ReadBlobString(image,primitive) != (char *) NULL)
-      {
-        for (p=primitive; (*p == ' ') || (*p == '\t'); p++) ;
-        if (LocaleNCompare(BoundingBox,p,strlen(BoundingBox)) != 0)
-          continue;
-        (void) sscanf(p,"viewbox %lf %lf %lf %lf",&bounds.x1,&bounds.y1,
-          &bounds.x2,&bounds.y2);
-        image->columns=(size_t) floor((bounds.x2-bounds.x1)+0.5);
-        image->rows=(size_t) floor((bounds.y2-bounds.y1)+0.5);
-        break;
-      }
+      (void) CloseBlob(image);
+      return(GetFirstImageInList(image));
     }
-  if ((image->columns == 0) || (image->rows == 0))
-    ThrowReaderException(OptionError,"MustSpecifyImageSize");
-  draw_info=CloneDrawInfo(image_info,(DrawInfo *) NULL);
-  draw_info->affine.sx=image->resolution.x == 0.0 ? 1.0 : image->resolution.x/
-    DefaultResolution;
-  draw_info->affine.sy=image->resolution.y == 0.0 ? 1.0 : image->resolution.y/
-    DefaultResolution;
-  image->columns=(size_t) (draw_info->affine.sx*image->columns);
-  image->rows=(size_t) (draw_info->affine.sy*image->rows);
   status=SetImageExtent(image,image->columns,image->rows,exception);
   if (status == MagickFalse)
     return(DestroyImageList(image));
-  if (SetImageBackgroundColor(image,exception) == MagickFalse)
-    {
-      image=DestroyImageList(image);
-      return((Image *) NULL);
-    }
   /*
-    Render drawing.
+    Convert PGX image.
   */
-  if (GetBlobStreamData(image) == (unsigned char *) NULL)
-    draw_info->primitive=FileToString(image->filename,~0UL,exception);
-  else
-    {
-      draw_info->primitive=(char *) AcquireMagickMemory(GetBlobSize(image)+1);
-      if (draw_info->primitive != (char *) NULL)
-        {
-          CopyMagickMemory(draw_info->primitive,GetBlobStreamData(image),
-            GetBlobSize(image));
-          draw_info->primitive[GetBlobSize(image)]='\0';
-        }
-     }
-  if (draw_info->primitive == (char *) NULL)
+  (void) SetImageColorspace(image,GRAYColorspace,exception);
+  quantum_info=AcquireQuantumInfo(image_info,image);
+  if (quantum_info == (QuantumInfo *) NULL)
     ThrowReaderException(ResourceLimitError,"MemoryAllocationFailed");
-  (void) DrawImage(image,draw_info,exception);
-  (void) SetImageArtifact(image,"MVG",draw_info->primitive);
-  draw_info=DestroyDrawInfo(draw_info);
+  length=GetQuantumExtent(image,quantum_info,GrayQuantum);
+  for (y=0; y < (ssize_t) image->rows; y++)
+  {
+    register Quantum
+      *magick_restrict q;
+
+    q=QueueAuthenticPixels(image,0,y,image->columns,1,exception);
+    if (q == (Quantum *) NULL)
+      break;
+    pixels=(const unsigned char *) ReadBlobStream(image,length,
+      GetQuantumPixels(quantum_info),&count);
+    if (count != (ssize_t) length)
+      ThrowReaderException(CorruptImageError,"UnableToReadImageData");
+    (void) ImportQuantumPixels(image,(CacheView *) NULL,quantum_info,
+      GrayQuantum,pixels,exception);
+    if (SyncAuthenticPixels(image,exception) == MagickFalse)
+      break;
+    if (SetImageProgress(image,LoadImageTag,(MagickOffsetType) y,image->rows) == MagickFalse)
+      break;
+  }
+  SetQuantumImageType(image,GrayQuantum);
+  quantum_info=DestroyQuantumInfo(quantum_info);
+  if (EOFBlob(image) != MagickFalse)
+    ThrowFileException(exception,CorruptImageError,"UnexpectedEndOfFile",
+      image->filename);
   (void) CloseBlob(image);
   return(GetFirstImageInList(image));
 }
@@ -226,35 +238,35 @@ static Image *ReadMVGImage(const ImageInfo *image_info,ExceptionInfo *exception)
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%   R e g i s t e r M V G I m a g e                                           %
+%   R e g i s t e r P G X I m a g e                                           %
 %                                                                             %
 %                                                                             %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  RegisterMVGImage() adds properties for the MVG image format
-%  to the list of supported formats.  The properties include the image format
+%  RegisterPGXImage() adds attributes for the PGX image format to
+%  the list of supported formats.  The attributes include the image format
 %  tag, a method to read and/or write the format, whether the format
 %  supports the saving of more than one frame to the same file or blob,
 %  whether the format supports native in-memory I/O, and a brief
 %  description of the format.
 %
-%  The format of the RegisterMVGImage method is:
+%  The format of the RegisterPGXImage method is:
 %
-%      size_t RegisterMVGImage(void)
+%      size_t RegisterPGXImage(void)
 %
 */
-ModuleExport size_t RegisterMVGImage(void)
+ModuleExport size_t RegisterPGXImage(void)
 {
   MagickInfo
     *entry;
 
-  entry=AcquireMagickInfo("MVG","MVG","Magick Vector Graphics");
-  entry->decoder=(DecodeImageHandler *) ReadMVGImage;
-  entry->encoder=(EncodeImageHandler *) WriteMVGImage;
-  entry->magick=(IsImageFormatHandler *) IsMVG;
-  entry->format_type=ImplicitFormatType;
+  entry=AcquireMagickInfo("PGX","PGX","JPEG 2000 uncompressed format");
+  entry->decoder=(DecodeImageHandler *) ReadPGXImage;
+  entry->encoder=(EncodeImageHandler *) WritePGXImage;
+  entry->magick=(IsImageFormatHandler *) IsPGX;
   entry->flags^=CoderAdjoinFlag;
+  entry->flags^=CoderUseExtensionFlag;
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);
 }
@@ -264,23 +276,23 @@ ModuleExport size_t RegisterMVGImage(void)
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%   U n r e g i s t e r M V G I m a g e                                       %
+%   U n r e g i s t e r P G X I m a g e                                       %
 %                                                                             %
 %                                                                             %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  UnregisterMVGImage() removes format registrations made by the
-%  MVG module from the list of supported formats.
+%  UnregisterPGXImage() removes format registrations made by the
+%  PGX module from the list of supported formats.
 %
-%  The format of the UnregisterMVGImage method is:
+%  The format of the UnregisterPGXImage method is:
 %
-%      UnregisterMVGImage(void)
+%      UnregisterPGXImage(void)
 %
 */
-ModuleExport void UnregisterMVGImage(void)
+ModuleExport void UnregisterPGXImage(void)
 {
-  (void) UnregisterMagickInfo("MVG");
+  (void) UnregisterMagickInfo("PGX");
 }
 
 /*
@@ -288,17 +300,17 @@ ModuleExport void UnregisterMVGImage(void)
 %                                                                             %
 %                                                                             %
 %                                                                             %
-%   W r i t e M V G I m a g e                                                 %
+%   W r i t e P G X I m a g e                                                 %
 %                                                                             %
 %                                                                             %
 %                                                                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  WriteMVGImage() writes an image to a file in MVG image format.
+%  WritePGXImage() writes an image of raw bits in LSB order to a file.
 %
-%  The format of the WriteMVGImage method is:
+%  The format of the WritePGXImage method is:
 %
-%      MagickBooleanType WriteMVGImage(const ImageInfo *image_info,
+%      MagickBooleanType WritePGXImage(const ImageInfo *image_info,
 %        Image *image,ExceptionInfo *exception)
 %
 %  A description of each parameter follows.
@@ -310,14 +322,30 @@ ModuleExport void UnregisterMVGImage(void)
 %    o exception: return any errors or warnings in this structure.
 %
 */
-static MagickBooleanType WriteMVGImage(const ImageInfo *image_info,Image *image,
+static MagickBooleanType WritePGXImage(const ImageInfo *image_info,Image *image,
   ExceptionInfo *exception)
 {
-  const char
-    *value;
+  char
+    buffer[MagickPathExtent];
 
   MagickBooleanType
     status;
+
+  QuantumInfo
+    *quantum_info;
+
+  register const Quantum
+    *p;
+
+  size_t
+    length;
+
+  ssize_t
+    count,
+    y;
+
+  unsigned char
+    *pixels;
 
   /*
     Open output image file.
@@ -328,13 +356,34 @@ static MagickBooleanType WriteMVGImage(const ImageInfo *image_info,Image *image,
   assert(image->signature == MagickCoreSignature);
   if (image->debug != MagickFalse)
     (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
-  value=GetImageArtifact(image,"MVG");
-  if (value == (const char *) NULL)
-    ThrowWriterException(OptionError,"NoImageVectorGraphics");
-  status=OpenBlob(image_info,image,WriteBlobMode,exception);
+  assert(exception != (ExceptionInfo *) NULL);
+  assert(exception->signature == MagickCoreSignature);
+  status=OpenBlob(image_info,image,WriteBinaryBlobMode,exception);
   if (status == MagickFalse)
     return(status);
-  (void) WriteBlob(image,strlen(value),(const unsigned char *) value);
+  (void) FormatLocaleString(buffer,MagickPathExtent,"PG ML + %ld %lu %lu\n",
+    image->depth,image->columns,image->rows);
+  (void) WriteBlob(image,strlen(buffer),(unsigned char *) buffer);
+  (void) TransformImageColorspace(image,sRGBColorspace,exception);
+  quantum_info=AcquireQuantumInfo(image_info,image);
+  pixels=(unsigned char *) GetQuantumPixels(quantum_info);
+  for (y=0; y < (ssize_t) image->rows; y++)
+  {
+    p=GetVirtualPixels(image,0,y,image->columns,1,exception);
+    if (p == (const Quantum *) NULL)
+      break;
+    length=ExportQuantumPixels(image,(CacheView *) NULL,quantum_info,
+      GrayQuantum,pixels,exception);
+    count=WriteBlob(image,length,pixels);
+    if (count != (ssize_t) length)
+      ThrowWriterException(CorruptImageError,"UnableToWriteImageData");
+    count=WriteBlob(image,(size_t) (-(ssize_t) length) & 0x01,pixels);
+    status=SetImageProgress(image,SaveImageTag,(MagickOffsetType) y,
+      image->rows);
+    if (status == MagickFalse)
+      break;
+  }
+  quantum_info=DestroyQuantumInfo(quantum_info);
   (void) CloseBlob(image);
-  return(MagickTrue);
+  return(status);
 }

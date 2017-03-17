@@ -18,9 +18,6 @@
 #ifndef MAGICKCORE_IMAGE_H
 #define MAGICKCORE_IMAGE_H
 
-#include "MagickCore/color.h"
-#include "MagickCore/pixel.h"
-
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
@@ -180,7 +177,7 @@ struct _Image
 
   PixelInfo
     *colormap,
-    alpha_color,        /* current alphacolor attribute */
+    alpha_color,        /* deprecated */
     background_color,   /* current background color attribute */
     border_color,       /* current bordercolor attribute */
     transparent_color;  /* color for 'transparent' color index in GIF */
@@ -355,6 +352,9 @@ struct _Image
 
   size_t
     signature;
+
+  PixelInfo
+    matte_color;        /* current mattecolor attribute */
 };
 
 /*
@@ -412,7 +412,7 @@ struct _ImageInfo
     fuzz;               /* current color fuzz attribute */
 
   PixelInfo
-    alpha_color,        /* alpha (frame) color */
+    alpha_color,        /* deprecated */
     background_color,   /* user set background color */
     border_color,       /* user set border color */
     transparent_color;  /* color for transparent index in color tables */
@@ -477,6 +477,12 @@ struct _ImageInfo
 
   size_t
     signature;
+
+  CustomStreamInfo
+    *custom_stream;
+
+  PixelInfo
+    matte_color;        /* matte (frame) color */
 };
 
 extern MagickExport ChannelType
@@ -561,7 +567,8 @@ extern MagickExport void
   DisassociateImageStream(Image *),
   GetImageInfo(ImageInfo *),
   SetImageInfoBlob(ImageInfo *,const void *,const size_t),
-  SetImageInfoFile(ImageInfo *,FILE *);
+  SetImageInfoFile(ImageInfo *,FILE *),
+  SetImageInfoCustomStream(ImageInfo *,CustomStreamInfo *);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }

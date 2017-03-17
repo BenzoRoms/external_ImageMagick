@@ -246,14 +246,10 @@ static Image *ReadTGAImage(const ImageInfo *image_info,
   if ((tga_info.image_type != TGAColormap) &&
       (tga_info.image_type != TGARLEColormap))
     image->depth=(size_t) ((tga_info.bits_per_pixel <= 8) ? 8 :
-      (tga_info.bits_per_pixel <= 16) ? 5 :
-      (tga_info.bits_per_pixel == 24) ? 8 :
-      (tga_info.bits_per_pixel == 32) ? 8 : 8);
+      (tga_info.bits_per_pixel <= 16) ? 5 : 8);
   else
     image->depth=(size_t) ((tga_info.colormap_size <= 8) ? 8 :
-      (tga_info.colormap_size <= 16) ? 5 :
-      (tga_info.colormap_size == 24) ? 8 :
-      (tga_info.colormap_size == 32) ? 8 : 8);
+      (tga_info.colormap_size <= 16) ? 5 : 8);
   if ((tga_info.image_type == TGAColormap) ||
       (tga_info.image_type == TGAMonochrome) ||
       (tga_info.image_type == TGARLEColormap) ||
@@ -717,6 +713,7 @@ static MagickBooleanType WriteTGAImage(const ImageInfo *image_info,Image *image,
     compression;
 
   const char
+    *comment,
     *value;
 
   const double
@@ -775,9 +772,9 @@ static MagickBooleanType WriteTGAImage(const ImageInfo *image_info,Image *image,
     compression=image_info->compression;
   range=GetQuantumRange(5UL);
   tga_info.id_length=0;
-  value=GetImageProperty(image,"comment",exception);
-  if (value != (const char *) NULL)
-    tga_info.id_length=(unsigned char) MagickMin(strlen(value),255);
+  comment=GetImageProperty(image,"comment",exception);
+  if (comment != (const char *) NULL)
+    tga_info.id_length=(unsigned char) MagickMin(strlen(comment),255);
   tga_info.colormap_type=0;
   tga_info.colormap_index=0;
   tga_info.colormap_length=0;
@@ -861,7 +858,7 @@ static MagickBooleanType WriteTGAImage(const ImageInfo *image_info,Image *image,
   (void) WriteBlobByte(image,tga_info.bits_per_pixel);
   (void) WriteBlobByte(image,tga_info.attributes);
   if (tga_info.id_length != 0)
-    (void) WriteBlob(image,tga_info.id_length,(unsigned char *) value);
+    (void) WriteBlob(image,tga_info.id_length,(unsigned char *) comment);
   if (tga_info.colormap_type != 0)
     {
       unsigned char

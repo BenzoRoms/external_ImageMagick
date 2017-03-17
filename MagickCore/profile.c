@@ -1667,8 +1667,9 @@ static MagickBooleanType SetImageProfileInternal(Image *image,const char *name,
     {
       if (LocaleCompare(name,"8bim") == 0)
         GetProfilesFromResourceBlock(image,profile,exception);
-      else if (recursive == MagickFalse)
-        WriteTo8BimProfile(image,name,profile);
+      else
+        if (recursive == MagickFalse)
+          WriteTo8BimProfile(image,name,profile);
     }
   /*
     Inject profile into image properties.
@@ -2048,7 +2049,7 @@ MagickBooleanType SyncExifProfile(Image *image,StringInfo *profile)
             The directory entry contains an offset.
           */
           offset=(ssize_t)  ReadProfileLong(endian,q+8);
-          if ((size_t) (offset+number_bytes) > length)
+          if ((offset < 0) || ((size_t) (offset+number_bytes) > length))
             continue;
           if (~length < number_bytes)
             continue;  /* prevent overflow */

@@ -106,8 +106,8 @@ namespace Magick
     bool alpha(void) const;
 
     // Transparent color
-    void alphaColor(const Color &alphaColor_);
-    Color alphaColor(void) const;
+    void matteColor(const Color &matteColor_);
+    Color matteColor(void) const;
 
     // Time in 1/100ths of a second which must expire before
     // displaying the next image in an animated sequence.
@@ -624,6 +624,7 @@ namespace Magick
     std::string artifact(const std::string &name_) const;
 
     // Access/Update a named image attribute
+    void attribute(const std::string name_,const char *value_);
     void attribute(const std::string name_,const std::string value_);
     std::string attribute(const std::string name_) const;
 

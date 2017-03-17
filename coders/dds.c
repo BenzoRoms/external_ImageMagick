@@ -725,10 +725,10 @@ static const DDSSingleColourLookup*
 #define FixRange(min, max, steps) \
 if (min > max) \
   min = max; \
-if (max - min < steps) \
+if ((ssize_t) max - min < steps) \
   max = MagickMin(min + steps, 255); \
-if (max - min < steps) \
-  min = MagickMax(0, max - steps)
+if ((ssize_t) max - min < steps) \
+  min = MagickMax(0, (ssize_t) max - steps)
 
 #define Dot(left, right) (left.x*right.x) + (left.y*right.y) + (left.z*right.z)
 
@@ -1943,7 +1943,8 @@ static MagickBooleanType ReadDXT1(Image *image,DDSInfo *dds_info,
           SetImageAlpha(image,QuantumRange,exception);
           q=QueueAuthenticPixels(image,x,y,MagickMin(4,image->columns-x),
             MagickMin(4,image->rows-y),exception);
-          SetDXT1Pixels(image,x,y,colors,bits,q);
+          if (q != (Quantum *) NULL)
+            SetDXT1Pixels(image,x,y,colors,bits,q);
         }
 
       if (SyncAuthenticPixels(image,exception) == MagickFalse)
@@ -2322,19 +2323,19 @@ ModuleExport size_t RegisterDDSImage(void)
   entry->decoder = (DecodeImageHandler *) ReadDDSImage;
   entry->encoder = (EncodeImageHandler *) WriteDDSImage;
   entry->magick = (IsImageFormatHandler *) IsDDS;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   entry = AcquireMagickInfo("DDS","DXT1","Microsoft DirectDraw Surface");
   entry->decoder = (DecodeImageHandler *) ReadDDSImage;
   entry->encoder = (EncodeImageHandler *) WriteDDSImage;
   entry->magick = (IsImageFormatHandler *) IsDDS;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   entry = AcquireMagickInfo("DDS","DXT5","Microsoft DirectDraw Surface");
   entry->decoder = (DecodeImageHandler *) ReadDDSImage;
   entry->encoder = (EncodeImageHandler *) WriteDDSImage;
   entry->magick = (IsImageFormatHandler *) IsDDS;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);
 }

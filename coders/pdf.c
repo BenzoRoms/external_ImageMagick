@@ -866,7 +866,6 @@ ModuleExport size_t RegisterPDFImage(void)
   entry->encoder=(EncodeImageHandler *) WritePDFImage;
   entry->flags^=CoderAdjoinFlag;
   entry->flags^=CoderBlobSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
   entry->mime_type=ConstantString("application/pdf");
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("PDF","EPDF",
@@ -875,7 +874,6 @@ ModuleExport size_t RegisterPDFImage(void)
   entry->encoder=(EncodeImageHandler *) WritePDFImage;
   entry->flags^=CoderAdjoinFlag;
   entry->flags^=CoderBlobSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
   entry->mime_type=ConstantString("application/pdf");
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("PDF","PDF","Portable Document Format");
@@ -883,7 +881,6 @@ ModuleExport size_t RegisterPDFImage(void)
   entry->encoder=(EncodeImageHandler *) WritePDFImage;
   entry->magick=(IsImageFormatHandler *) IsPDF;
   entry->flags^=CoderBlobSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
   entry->mime_type=ConstantString("application/pdf");
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("PDF","PDFA","Portable Document Archive Format");
@@ -891,7 +888,6 @@ ModuleExport size_t RegisterPDFImage(void)
   entry->encoder=(EncodeImageHandler *) WritePDFImage;
   entry->magick=(IsImageFormatHandler *) IsPDF;
   entry->flags^=CoderBlobSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
   entry->mime_type=ConstantString("application/pdf");
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);
@@ -1199,6 +1195,7 @@ RestoreMSCWarning
   char
     basename[MagickPathExtent],
     buffer[MagickPathExtent],
+    *escape,
     date[MagickPathExtent],
     **labels,
     page_geometry[MagickPathExtent],
@@ -1383,9 +1380,10 @@ RestoreMSCWarning
         (void) CopyMagickString(create_date,value,MagickPathExtent);
       (void) FormatMagickTime(time((time_t *) NULL),MagickPathExtent,timestamp);
       url=GetMagickHomeURL();
+      escape=EscapeParenthesis(basename);
       i=FormatLocaleString(xmp_profile,MagickPathExtent,XMPProfile,
-        XMPProfileMagick,modify_date,create_date,timestamp,url,
-        EscapeParenthesis(basename),url);
+        XMPProfileMagick,modify_date,create_date,timestamp,url,escape,url);
+      escape=DestroyString(escape);
       url=DestroyString(url);
       (void) FormatLocaleString(buffer,MagickPathExtent,"/Length %.20g\n",
         (double) i);
@@ -2840,8 +2838,9 @@ RestoreMSCWarning
   (void) FormatLocaleString(buffer,MagickPathExtent,"/ModDate (%s)\n",date);
   (void) WriteBlobString(image,buffer);
   url=GetMagickHomeURL();
-  (void) FormatLocaleString(buffer,MagickPathExtent,"/Producer (%s)\n",
-    EscapeParenthesis(url));
+  escape=EscapeParenthesis(url);
+  (void) FormatLocaleString(buffer,MagickPathExtent,"/Producer (%s)\n",escape);
+  escape=DestroyString(escape);
   url=DestroyString(url);
   (void) WriteBlobString(image,buffer);
   (void) WriteBlobString(image,">>\n");

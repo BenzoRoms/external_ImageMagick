@@ -1118,8 +1118,7 @@ static MagickBooleanType ReadPSDChannelRLE(Image *image,const PSDInfo *psd_info,
   if (length > row_size + 256) // arbitrary number
     {
       pixels=(unsigned char *) RelinquishMagickMemory(pixels);
-      ThrowBinaryException(ResourceLimitError,"InvalidLength",
-        image->filename);
+      ThrowBinaryException(ResourceLimitError,"InvalidLength",image->filename);
     }
 
   compact_pixels=(unsigned char *) AcquireQuantumMemory(length,sizeof(*pixels));
@@ -1307,8 +1306,11 @@ static MagickBooleanType ReadPSDChannel(Image *image,
       }
       mask=CloneImage(image,layer_info->mask.page.width,
         layer_info->mask.page.height,MagickFalse,exception);
-      SetImageType(mask,GrayscaleType,exception);
-      channel_image=mask;
+      if (mask != (Image *) NULL)
+        {
+          SetImageType(mask,GrayscaleType,exception);
+          channel_image=mask;
+        }
     }
 
   offset=TellBlob(image);
@@ -1359,14 +1361,7 @@ static MagickBooleanType ReadPSDChannel(Image *image,
       ThrowBinaryException(CoderError,"UnableToDecompressImage",
         image->filename);
     }
-  if (mask != (Image *) NULL)
-    {
-      if (status != MagickFalse)
-        layer_info->mask.image=mask;
-      else
-        mask=DestroyImage(mask);
-    }
-
+  layer_info->mask.image=mask;
   return(status);
 }
 
@@ -1667,8 +1662,8 @@ ModuleExport MagickBooleanType ReadPSDLayers(Image *image,
                 if (DiscardBlobBytes(image,(MagickSizeType) (length-18)) == MagickFalse)
                   {
                     layer_info=DestroyLayerInfo(layer_info,number_layers);
-                    ThrowBinaryException(CorruptImageError,"UnexpectedEndOfFile",
-                      image->filename);
+                    ThrowBinaryException(CorruptImageError,
+                      "UnexpectedEndOfFile",image->filename);
                   }
               }
             length=ReadBlobLong(image);
@@ -1698,7 +1693,7 @@ ModuleExport MagickBooleanType ReadPSDLayers(Image *image,
             /*
               Layer name.
             */
-            length=(MagickSizeType) ReadBlobByte(image);
+            length=(MagickSizeType) (unsigned char) ReadBlobByte(image);
             combined_length+=length+1;
             if (length > 0)
               (void) ReadBlob(image,(size_t) length++,layer_info[i].name);
@@ -2208,13 +2203,15 @@ ModuleExport size_t RegisterPSDImage(void)
   entry->decoder=(DecodeImageHandler *) ReadPSDImage;
   entry->encoder=(EncodeImageHandler *) WritePSDImage;
   entry->magick=(IsImageFormatHandler *) IsPSD;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("PSD","PSD","Adobe Photoshop bitmap");
   entry->decoder=(DecodeImageHandler *) ReadPSDImage;
   entry->encoder=(EncodeImageHandler *) WritePSDImage;
   entry->magick=(IsImageFormatHandler *) IsPSD;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);
 }
@@ -2518,7 +2515,7 @@ static size_t WritePSDChannel(const PSDInfo *psd_info,
     next_image->depth=16;
   monochrome=IsImageMonochrome(image) && (image->depth == 1) ?
     MagickTrue : MagickFalse;
-  quantum_info=AcquireQuantumInfo(image_info,image);
+  quantum_info=AcquireQuantumInfo(image_info,next_image);
   if (quantum_info == (QuantumInfo *) NULL)
     return(0);
   pixels=(unsigned char *) GetQuantumPixels(quantum_info);
@@ -2609,8 +2606,7 @@ static unsigned char *AcquireCompactPixels(const Image *image,
   if (compact_pixels == (unsigned char *) NULL)
     {
       (void) ThrowMagickException(exception,GetMagickModule(),
-        ResourceLimitError,"MemoryAllocationFailed","`%s'",
-        image->filename);
+        ResourceLimitError,"MemoryAllocationFailed","`%s'",image->filename);
     }
   return(compact_pixels);
 }
@@ -2641,7 +2637,7 @@ static size_t WritePSDChannels(const PSDInfo *psd_info,
   compact_pixels=(unsigned char *) NULL;
   if (next_image->compression == RLECompression)
     {
-      compact_pixels=AcquireCompactPixels(image,exception);
+      compact_pixels=AcquireCompactPixels(next_image,exception);
       if (compact_pixels == (unsigned char *) NULL)
         return(0);
     }

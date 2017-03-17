@@ -623,12 +623,6 @@ static Image *ReadMIFFImage(const ImageInfo *image_info,
               case 'a':
               case 'A':
               {
-                if (LocaleCompare(keyword,"alpha-color") == 0)
-                  {
-                    (void) QueryColorCompliance(options,AllCompliance,
-                      &image->alpha_color,exception);
-                    break;
-                  }
                 if (LocaleCompare(keyword,"alpha-trait") == 0)
                   {
                     ssize_t
@@ -833,6 +827,12 @@ static Image *ReadMIFFImage(const ImageInfo *image_info,
                       break;
                     image->alpha_trait=matte == 0 ? UndefinedPixelTrait :
                       BlendPixelTrait;
+                    break;
+                  }
+                if (LocaleCompare(keyword,"mattecolor") == 0)
+                  {
+                    (void) QueryColorCompliance(options,AllCompliance,
+                      &image->matte_color,exception);
                     break;
                   }
                 if (LocaleCompare(keyword,"montage") == 0)
@@ -1685,7 +1685,7 @@ ModuleExport size_t RegisterMIFFImage(void)
   entry->decoder=(DecodeImageHandler *) ReadMIFFImage;
   entry->encoder=(EncodeImageHandler *) WriteMIFFImage;
   entry->magick=(IsImageFormatHandler *) IsMIFF;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   if (*version != '\0')
     entry->version=ConstantString(version);
   (void) RegisterMagickInfo(entry);
@@ -2274,7 +2274,8 @@ static MagickBooleanType WriteMIFFImage(const ImageInfo *image_info,
 
           length=strlen(value);
           for (i=0; i < (ssize_t) length; i++)
-            if (isspace((int) ((unsigned char) value[i])) != 0)
+            if ((isspace((int) ((unsigned char) value[i])) != 0) ||
+                (value[i] == '}'))
               break;
           if ((i == (ssize_t) length) && (i != 0))
             (void) WriteBlob(image,length,(const unsigned char *) value);

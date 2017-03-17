@@ -92,6 +92,7 @@ LOCAL_SRC_FILES += aai.c\
     pcx.c\
     pdb.c\
     pdf.c\
+    pgx.c\
     pes.c\
     pict.c\
     pix.c\

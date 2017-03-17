@@ -615,7 +615,7 @@ static ssize_t PrintChannelPerceptualHash(Image *image,FILE *file,
     i;
 
   ssize_t
-    n;
+    n = 0;
 
   (void) FormatLocaleFile(file,"      \"colorspaces\": [ ");
   for (i=0; i < (ssize_t) channel_phash[0].number_colorspaces; i++)
@@ -1205,8 +1205,8 @@ static MagickBooleanType EncodeImageAttributes(Image *image,FILE *file,
       "      \"x\": %.20g,\n      \"y\": %.20g\n    },\n",
       (double) image->extract_info.width,(double) image->extract_info.height,
       (double) image->extract_info.x,(double) image->extract_info.y);
-  GetColorTuple(&image->alpha_color,MagickTrue,color);
-  (void) FormatLocaleFile(file,"    \"alphaColor\": \"%s\",\n",color);
+  GetColorTuple(&image->matte_color,MagickTrue,color);
+  (void) FormatLocaleFile(file,"    \"matteColor\": \"%s\",\n",color);
   GetColorTuple(&image->background_color,MagickTrue,color);
   (void) FormatLocaleFile(file,"    \"backgroundColor\": \"%s\",\n",color);
   GetColorTuple(&image->border_color,MagickTrue,color);

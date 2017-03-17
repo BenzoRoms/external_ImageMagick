@@ -378,6 +378,40 @@ MagickExport MagickBooleanType GetMagickBlobSupport(
 %                                                                             %
 %                                                                             %
 %                                                                             %
++   G e t M a g i c k D e c o d e r S e e k a b l e S t r e a m               %
+%                                                                             %
+%                                                                             %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  GetMagickDecoderSeekableStream() returns MagickTrue if the magick supports a
+%  seekable stream in the decoder.
+%
+%  The format of the GetMagickDecoderSeekableStream method is:
+%
+%      MagickBooleanType GetMagickDecoderSeekableStream(
+%        const MagickInfo *magick_info)
+%
+%  A description of each parameter follows:
+%
+%    o magick_info:  The magick info.
+%
+*/
+MagickExport MagickBooleanType GetMagickDecoderSeekableStream(
+  const MagickInfo *magick_info)
+{
+  assert(magick_info != (MagickInfo *) NULL);
+  assert(magick_info->signature == MagickCoreSignature);
+  if ((magick_info->flags & CoderDecoderSeekableStreamFlag) == 0)
+    return(MagickFalse);
+  return(MagickTrue);
+}
+
+/*
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                                                                             %
+%                                                                             %
 +   G e t M a g i c k D e c o d e r T h r e a d S u p p o r t                 %
 %                                                                             %
 %                                                                             %
@@ -433,6 +467,40 @@ MagickExport const char *GetMagickDescription(const MagickInfo *magick_info)
   assert(magick_info != (MagickInfo *) NULL);
   assert(magick_info->signature == MagickCoreSignature);
   return(magick_info->description);
+}
+
+/*
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                             %
+%                                                                             %
+%                                                                             %
++   G e t M a g i c k E n c o d e r S e e k a b l e S t r e a m               %
+%                                                                             %
+%                                                                             %
+%                                                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  GetMagickEncoderSeekableStream() returns MagickTrue if the magick supports a
+%  seekable stream in the encoder.
+%
+%  The format of the GetMagickEncoderSeekableStream method is:
+%
+%      MagickBooleanType GetMagickEncoderSeekableStream(
+%        const MagickInfo *magick_info)
+%
+%  A description of each parameter follows:
+%
+%    o magick_info:  The magick info.
+%
+*/
+MagickExport MagickBooleanType GetMagickEncoderSeekableStream(
+  const MagickInfo *magick_info)
+{
+  assert(magick_info != (MagickInfo *) NULL);
+  assert(magick_info->signature == MagickCoreSignature);
+  if ((magick_info->flags & CoderEncoderSeekableStreamFlag) == 0)
+    return(MagickFalse);
+  return(MagickTrue);
 }
 
 /*
@@ -845,38 +913,7 @@ MagickExport MagickBooleanType GetMagickRawSupport(
   return(((magick_info->flags & CoderRawSupportFlag) == 0) ? MagickFalse :
     MagickTrue);
 }
-
-/*
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                                                                             %
-%                                                                             %
-%                                                                             %
-+   G e t M a g i c k S e e k a b l e S t r e a m                             %
-%                                                                             %
-%                                                                             %
-%                                                                             %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%  GetMagickSeekableStream() returns MagickTrue if the magick supports a
-%  seekable stream.
-%
-%  The format of the GetMagickSeekableStream method is:
-%
-%      MagickBooleanType GetMagickSeekableStream(const MagickInfo *magick_info)
-%
-%  A description of each parameter follows:
-%
-%    o magick_info:  The magick info.
-%
-*/
-MagickExport MagickBooleanType GetMagickSeekableStream(
-  const MagickInfo *magick_info)
-{
-  assert(magick_info != (MagickInfo *) NULL);
-  assert(magick_info->signature == MagickCoreSignature);
-  return(((magick_info->flags & CoderSeekableStreamFlag) == 0) ? MagickFalse :
-    MagickTrue);
-}
+
 
 /*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -907,6 +944,7 @@ MagickExport MagickBooleanType GetMagickStealth(const MagickInfo *magick_info)
   return(((magick_info->flags & CoderStealthFlag) == 0) ? MagickFalse :
     MagickTrue);
 }
+
 
 /*
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

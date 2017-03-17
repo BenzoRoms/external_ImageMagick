@@ -2092,7 +2092,7 @@ static void ImportGrayQuantum(const Image *image,QuantumInfo *quantum_info,
           for (x=0; x < (ssize_t) number_pixels; x++)
           {
             p=PushCharPixel(p,&pixel);
-            SetPixelGray(image,ScaleCharToQuantum(pixel),q);
+            SetPixelGray(image,QuantumRange-ScaleCharToQuantum(pixel),q);
             SetPixelAlpha(image,OpaqueAlpha,q);
             p+=quantum_info->pad;
             q+=GetPixelChannels(image);

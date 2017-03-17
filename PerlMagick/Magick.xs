@@ -4075,46 +4075,46 @@ Features(ref,...)
   {
 #define ChannelFeatures(channel,direction) \
 { \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].angular_second_moment[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].contrast[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].contrast[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].variance_sum_of_squares[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].inverse_difference_moment[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_average[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_variance[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].difference_variance[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].difference_entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].measure_of_correlation_1[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].measure_of_correlation_2[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].maximum_correlation_coefficient[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
 }
@@ -4201,20 +4201,24 @@ Features(ref,...)
     count=0;
     for ( ; image; image=image->next)
     {
+      register ssize_t
+        j;
+
       channel_features=GetImageFeatures(image,distance,exception);
       if (channel_features == (ChannelFeatures *) NULL)
         continue;
       count++;
-      EXTEND(sp,280*count);
-      for (i=0; i < 4; i++)
+      for (j=0; j < 4; j++)
       {
-        ChannelFeatures(RedChannel,i);
-        ChannelFeatures(GreenChannel,i);
-        ChannelFeatures(BlueChannel,i);
-        if (image->colorspace == CMYKColorspace)
-          ChannelFeatures(BlackChannel,i);
-        if (image->alpha_trait != UndefinedPixelTrait)
-          ChannelFeatures(AlphaChannel,i);
+        for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+        {
+          PixelChannel channel=GetPixelChannelChannel(image,i);
+          PixelTrait traits=GetPixelChannelTraits(image,channel);
+          if (traits == UndefinedPixelTrait)
+            continue;
+          EXTEND(sp,14*(i+1)*count);
+          ChannelFeatures(channel,j);
+        }
       }
       channel_features=(ChannelFeatures *)
         RelinquishMagickMemory(channel_features);
@@ -4704,7 +4708,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.blue_primary.x,
                 image->chromaticity.blue_primary.y);
               s=newSVpv(color,0);
@@ -4897,7 +4901,7 @@ Get(ref,...)
 
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(geometry,MagickPathExtent,"%.15gx%.15g",
+              (void) FormatLocaleString(geometry,MagickPathExtent,"%.20gx%.20g",
                 image->resolution.x,image->resolution.y);
               s=newSVpv(geometry,0);
               PUSHs(s ? sv_2mortal(s) : &sv_undef);
@@ -5089,7 +5093,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.green_primary.x,
                 image->chromaticity.green_primary.y);
               s=newSVpv(color,0);
@@ -5523,7 +5527,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.red_primary.x,
                 image->chromaticity.red_primary.y);
               s=newSVpv(color,0);
@@ -5720,7 +5724,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.white_point.x,
                 image->chromaticity.white_point.y);
               s=newSVpv(color,0);
@@ -9081,7 +9085,7 @@ Mogrify(ref,...)
           if (attribute_flag[0] == 0)
             {
               (void) FormatLocaleString(message,MagickPathExtent,
-                "%.15g,%.15g,%.15g",(double) argument_list[2].real_reference,
+                "%.20g,%.20g,%.20g",(double) argument_list[2].real_reference,
                 (double) argument_list[3].real_reference,
                 (double) argument_list[4].real_reference);
               argument_list[0].string_reference=message;
@@ -9189,7 +9193,7 @@ Mogrify(ref,...)
               geometry_info.rho=argument_list[6].real_reference;
               SetImageArtifact(image,"modulate:colorspace","HWB");
             }
-          (void) FormatLocaleString(modulate,MagickPathExtent,"%.15g,%.15g,%.15g",
+          (void) FormatLocaleString(modulate,MagickPathExtent,"%.20g,%.20g,%.20g",
             geometry_info.rho,geometry_info.sigma,geometry_info.xi);
           (void) ModulateImage(image,modulate,exception);
           break;
@@ -12981,7 +12985,7 @@ QueryFontMetrics(ref,...)
       {
         draw_info->geometry=AcquireString((char *) NULL);
         (void) FormatLocaleString(draw_info->geometry,MagickPathExtent,
-          "%.15g,%.15g",x,y);
+          "%.20g,%.20g",x,y);
       }
     status=GetTypeMetrics(image,draw_info,&metrics,exception);
     (void) CatchImageException(image);
@@ -13354,7 +13358,7 @@ QueryMultilineFontMetrics(ref,...)
       {
         draw_info->geometry=AcquireString((char *) NULL);
         (void) FormatLocaleString(draw_info->geometry,MagickPathExtent,
-          "%.15g,%.15g",x,y);
+          "%.20g,%.20g",x,y);
       }
     status=GetMultilineTypeMetrics(image,draw_info,&metrics,exception);
     (void) CatchException(exception);
@@ -14300,25 +14304,25 @@ Statistics(ref,...)
   (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     (double) channel_statistics[channel].depth); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].minima/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].minima/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].maxima/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].maxima/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].mean/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].mean/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].standard_deviation/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].standard_deviation/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].kurtosis); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].skewness); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].entropy); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
 }
@@ -14331,9 +14335,6 @@ Statistics(ref,...)
 
     ChannelStatistics
       *channel_statistics;
-
-    double
-      scale;
 
     ExceptionInfo
       *exception;
@@ -14375,19 +14376,24 @@ Statistics(ref,...)
     count=0;
     for ( ; image; image=image->next)
     {
+      register size_t
+        i;
+
       channel_statistics=GetImageStatistics(image,exception);
       if (channel_statistics == (ChannelStatistics *) NULL)
         continue;
       count++;
-      EXTEND(sp,35*count);
-      scale=(double) QuantumRange;
-      ChannelStatistics(RedChannel);
-      ChannelStatistics(GreenChannel);
-      ChannelStatistics(BlueChannel);
-      if (image->colorspace == CMYKColorspace)
-        ChannelStatistics(BlackChannel);
-      if (image->alpha_trait != UndefinedPixelTrait)
-        ChannelStatistics(AlphaChannel);
+      for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+      {
+        PixelChannel channel=GetPixelChannelChannel(image,i);
+        PixelTrait traits=GetPixelChannelTraits(image,channel);
+        if (traits == UndefinedPixelTrait)
+          continue;
+        EXTEND(sp,8*(i+1)*count);
+        ChannelStatistics(channel);
+      }
+      EXTEND(sp,8*(i+1)*count);
+      ChannelStatistics(CompositePixelChannel);
       channel_statistics=(ChannelStatistics *)
         RelinquishMagickMemory(channel_statistics);
     }

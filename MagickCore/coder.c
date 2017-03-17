@@ -83,7 +83,8 @@ static const CoderMapInfo
   CoderMap[] =
   {
     { "3FR", "DNG" },
-    { "8BIM", "META" },
+    { "3GP", "MPEG" },
+    { "3G2", "MPEG" },
     { "8BIMTEXT", "META" },
     { "8BIMWTEXT", "META" },
     { "AFM", "TTF" },
@@ -919,7 +920,8 @@ static MagickBooleanType LoadCoderCache(SplayTreeInfo *cache,const char *xml,
       }
     if (coder_info == (CoderInfo *) NULL)
       continue;
-    if (LocaleCompare(keyword,"/>") == 0)
+    if ((LocaleCompare(keyword,"/>") == 0) ||
+        (LocaleCompare(keyword,"</policy>") == 0))
       {
         status=AddValueToSplayTree(cache,ConstantString(coder_info->magick),
           coder_info);

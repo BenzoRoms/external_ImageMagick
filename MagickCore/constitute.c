@@ -388,12 +388,6 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
   MagickStatusType
     flags;
 
-  PolicyDomain
-    domain;
-
-  PolicyRights
-    rights;
-
   /*
     Determine image type from filename prefix or suffix (e.g. image.jpg).
   */
@@ -409,16 +403,6 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
   (void) SetImageInfo(read_info,0,exception);
   (void) CopyMagickString(filename,read_info->filename,MagickPathExtent);
   (void) CopyMagickString(magick,read_info->magick,MagickPathExtent);
-  domain=CoderPolicyDomain;
-  rights=ReadPolicyRights;
-  if (IsRightsAuthorized(domain,rights,read_info->magick) == MagickFalse)
-    {
-      errno=EPERM;
-      (void) ThrowMagickException(exception,GetMagickModule(),PolicyError,
-        "NotAuthorized","`%s'",read_info->filename);
-      read_info=DestroyImageInfo(read_info);
-      return((Image *) NULL);
-    }
   /*
     Call appropriate image reader based on image type.
   */
@@ -427,6 +411,22 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
   sans_exception=DestroyExceptionInfo(sans_exception);
   if (magick_info != (const MagickInfo *) NULL)
     {
+      PolicyDomain
+        domain;
+
+      PolicyRights
+        rights;
+
+      domain=CoderPolicyDomain;
+      rights=ReadPolicyRights;
+      if (IsRightsAuthorized(domain,rights,magick_info->module) == MagickFalse)
+        {
+          errno=EPERM;
+          (void) ThrowMagickException(exception,GetMagickModule(),PolicyError,
+            "NotAuthorized","`%s'",read_info->filename);
+          read_info=DestroyImageInfo(read_info);
+          return((Image *) NULL);
+        }
       if (GetMagickEndianSupport(magick_info) == MagickFalse)
         read_info->endian=UndefinedEndian;
       else
@@ -442,7 +442,7 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
          }
     }
   if ((magick_info != (const MagickInfo *) NULL) &&
-      (GetMagickSeekableStream(magick_info) != MagickFalse))
+      (GetMagickDecoderSeekableStream(magick_info) != MagickFalse))
     {
       MagickBooleanType
         status;
@@ -603,6 +603,9 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
     const StringInfo
       *profile;
 
+    ssize_t
+      option_type;
+
     next->taint=MagickFalse;
     GetPathComponent(magick_filename,MagickPath,magick_path);
     if (*magick_path == '\0' && *next->magick == '\0')
@@ -632,6 +635,8 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
         flags=ParseGeometry(value,&geometry_info);
         if (geometry_info.sigma != 0)
           next->resolution.x=geometry_info.rho/geometry_info.sigma;
+        if (strchr(value,',') != (char *) NULL)
+          next->resolution.x=geometry_info.rho+geometry_info.sigma/1000.0;
         (void) DeleteImageProperty(next,"exif:XResolution");
       }
     value=GetImageProperty(next,"exif:YResolution",exception);
@@ -642,6 +647,8 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
         flags=ParseGeometry(value,&geometry_info);
         if (geometry_info.sigma != 0)
           next->resolution.y=geometry_info.rho/geometry_info.sigma;
+        if (strchr(value,',') != (char *) NULL)
+          next->resolution.y=geometry_info.rho+geometry_info.sigma/1000.0;
         (void) DeleteImageProperty(next,"exif:YResolution");
       }
     value=GetImageProperty(next,"tiff:ResolutionUnit",exception);
@@ -649,7 +656,10 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
       value=GetImageProperty(next,"exif:ResolutionUnit",exception);
     if (value != (char *) NULL)
       {
-        next->units=(ResolutionType) (StringToLong(value)-1);
+        option_type=ParseCommandOption(MagickResolutionOptions,MagickFalse,
+          value);
+        if (option_type >= 0)
+          next->units=(ResolutionType) option_type;
         (void) DeleteImageProperty(next,"exif:ResolutionUnit");
         (void) DeleteImageProperty(next,"tiff:ResolutionUnit");
       }
@@ -748,8 +758,12 @@ MagickExport Image *ReadImage(const ImageInfo *image_info,
       }
     option=GetImageOption(image_info,"dispose");
     if (option != (const char *) NULL)
-      next->dispose=(DisposeType) ParseCommandOption(MagickDisposeOptions,
-        MagickFalse,option);
+      {
+        option_type=ParseCommandOption(MagickDisposeOptions,MagickFalse,
+          option);
+        if (option_type >= 0)
+          next->dispose=(DisposeType) option_type;
+      }
     if (read_info->verbose != MagickFalse)
       (void) IdentifyImage(next,stderr,MagickFalse,exception);
     image=next;
@@ -981,12 +995,6 @@ MagickExport MagickBooleanType WriteImage(const ImageInfo *image_info,
     status,
     temporary;
 
-  PolicyDomain
-    domain;
-
-  PolicyRights
-    rights;
-
   /*
     Determine image type from filename prefix or suffix (e.g. image.jpg).
   */
@@ -1008,15 +1016,6 @@ MagickExport MagickBooleanType WriteImage(const ImageInfo *image_info,
   (void) CopyMagickString(filename,image->filename,MagickPathExtent);
   (void) CopyMagickString(image->filename,write_info->filename,
     MagickPathExtent);
-  domain=CoderPolicyDomain;
-  rights=WritePolicyRights;
-  if (IsRightsAuthorized(domain,rights,write_info->magick) == MagickFalse)
-    {
-      sans_exception=DestroyExceptionInfo(sans_exception);
-      write_info=DestroyImageInfo(write_info);
-      errno=EPERM;
-      ThrowBinaryException(PolicyError,"NotAuthorized",filename);
-    }
   /*
     Call appropriate image writer based on image type.
   */
@@ -1024,6 +1023,20 @@ MagickExport MagickBooleanType WriteImage(const ImageInfo *image_info,
   sans_exception=DestroyExceptionInfo(sans_exception);
   if (magick_info != (const MagickInfo *) NULL)
     {
+      PolicyDomain
+        domain;
+
+      PolicyRights
+        rights;
+
+      domain=CoderPolicyDomain;
+      rights=WritePolicyRights;
+      if (IsRightsAuthorized(domain,rights,magick_info->module) == MagickFalse)
+        {
+          write_info=DestroyImageInfo(write_info);
+          errno=EPERM;
+          ThrowBinaryException(PolicyError,"NotAuthorized",filename);
+        }
       if (GetMagickEndianSupport(magick_info) == MagickFalse)
         image->endian=UndefinedEndian;
       else
@@ -1066,7 +1079,7 @@ MagickExport MagickBooleanType WriteImage(const ImageInfo *image_info,
   status=MagickFalse;
   temporary=MagickFalse;
   if ((magick_info != (const MagickInfo *) NULL) &&
-      (GetMagickSeekableStream(magick_info) != MagickFalse))
+      (GetMagickEncoderSeekableStream(magick_info) != MagickFalse))
     {
       char
         image_filename[MagickPathExtent];

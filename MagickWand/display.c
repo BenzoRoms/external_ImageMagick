@@ -244,7 +244,7 @@ static MagickBooleanType DisplayUsage(void)
   (void) printf(
     "resources as command line options:  -background, -bordercolor,\n");
   (void) printf(
-    " -alpha-color, -borderwidth, -font, -foreground, -iconGeometry,\n");
+    " -mattecolor, -borderwidth, -font, -foreground, -iconGeometry,\n");
   (void) printf("-iconic, -name, -shared-memory, -usePixmap, or -title.\n");
   (void) printf(
     "\nBy default, the image format of 'file' is determined by its magic\n");
@@ -462,7 +462,7 @@ WandExport MagickBooleanType DisplayImageCommand(ImageInfo *image_info,
         if (isatty(STDIN_FILENO) != MagickFalse)
           option="logo:";
         else
-         option="-";
+          option="-";
     if (LocaleCompare(option,"(") == 0)
       {
         FireImageStack(MagickFalse,MagickTrue,pend);
@@ -509,9 +509,7 @@ WandExport MagickBooleanType DisplayImageCommand(ImageInfo *image_info,
           continue;
         AppendImageStack(images);
         FinalizeImageSettings(image_info,image,MagickFalse);
-        iterations=0;
-        if (i == (ssize_t) argc)
-          iterations=image->iterations;
+        iterations=image->iterations;
         image_list=CloneImageList(image,exception);
         if (image_list == (Image *) NULL)
           ThrowDisplayException(ResourceLimitError,"MemoryAllocationFailed",
@@ -652,8 +650,12 @@ WandExport MagickBooleanType DisplayImageCommand(ImageInfo *image_info,
           }
         if (resource_info.window_id != (char *) NULL)
           state|=ExitState;
-        if ((iterations != 0) && (++iteration == (ssize_t) iterations))
-          state|=ExitState;
+        if (iterations != 0)
+          {
+            if (++iteration == (ssize_t) iterations)
+              state|=ExitState;
+            i=0;
+          }
         if (LocaleCompare(filename,"-") == 0)
           state|=ExitState;
         RemoveAllImageStack();
@@ -674,10 +676,11 @@ WandExport MagickBooleanType DisplayImageCommand(ImageInfo *image_info,
             i++;
             if (i == (ssize_t) argc)
               ThrowDisplayException(OptionError,"MissingArgument",option);
-            type=ParseCommandOption(MagickAlphaChannelOptions,MagickFalse,argv[i]);
+            type=ParseCommandOption(MagickAlphaChannelOptions,MagickFalse,
+              argv[i]);
             if (type < 0)
-              ThrowDisplayException(OptionError,"UnrecognizedAlphaChannelOption",
-                argv[i]);
+              ThrowDisplayException(OptionError,
+                "UnrecognizedAlphaChannelOption",argv[i]);
             break;
           }
         if (LocaleCompare("antialias",option+1) == 0)
@@ -1378,14 +1381,14 @@ WandExport MagickBooleanType DisplayImageCommand(ImageInfo *image_info,
           }
         if (LocaleCompare("matte",option+1) == 0)
           break;
-        if (LocaleCompare("alpha-color",option+1) == 0)
+        if (LocaleCompare("mattecolor",option+1) == 0)
           {
             if (*option == '+')
               break;
             i++;
             if (i == (ssize_t) argc)
               ThrowDisplayException(OptionError,"MissingArgument",option);
-            resource_info.alpha_color=argv[i];
+            resource_info.matte_color=argv[i];
             break;
           }
         if (LocaleCompare("monitor",option+1) == 0)

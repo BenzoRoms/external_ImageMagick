@@ -2233,6 +2233,9 @@ MagickExport MagickBooleanType DrawImage(Image *image,const DrawInfo *draw_info,
           {
             GetNextToken(q,&q,extent,token);
             factor=strchr(token,'%') != (char *) NULL ? 0.01 : 1.0;
+            graphic_context[n]->alpha=QuantumRange*(1.0-(QuantumScale*
+              graphic_context[n]->alpha*(1.0-factor*StringToDouble(token,
+              &next_token))));
             graphic_context[n]->fill_alpha=QuantumRange*(1.0-(QuantumScale*
               graphic_context[n]->fill_alpha*(1.0-factor*StringToDouble(token,
               &next_token))));
@@ -2921,11 +2924,8 @@ MagickExport MagickBooleanType DrawImage(Image *image,const DrawInfo *draw_info,
         (size_t) number_points,sizeof(*primitive_info));
       if ((primitive_info == (PrimitiveInfo *) NULL) ||
           (number_points != (MagickSizeType) ((size_t) number_points)))
-        {
-          (void) ThrowMagickException(exception,GetMagickModule(),
-            ResourceLimitError,"MemoryAllocationFailed","`%s'",image->filename);
-          break;
-        }
+        ThrowBinaryException(ResourceLimitError,"MemoryAllocationFailed",
+          image->filename);
     }
     primitive_info[j].primitive=primitive_type;
     primitive_info[j].coordinates=(size_t) x;
@@ -4955,6 +4955,7 @@ MagickExport void GetDrawInfo(const ImageInfo *image_info,DrawInfo *draw_info)
     exception);
   draw_info->stroke_width=1.0;
   draw_info->fill_rule=EvenOddRule;
+  draw_info->alpha=OpaqueAlpha;
   draw_info->fill_alpha=OpaqueAlpha;
   draw_info->stroke_alpha=OpaqueAlpha;
   draw_info->linecap=ButtCap;

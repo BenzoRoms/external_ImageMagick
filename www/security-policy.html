@@ -21,7 +21,7 @@
   <meta name="author" content="ImageMagick Studio LLC"/>
   <meta name="revisit-after" content="2 DAYS"/>
   <meta name="resource-type" content="document"/>
-  <meta name="copyright" content="Copyright (c) 1999-2016 ImageMagick Studio LLC"/>
+  <meta name="copyright" content="Copyright (c) 1999-2017 ImageMagick Studio LLC"/>
   <meta name="distribution" content="Global"/>
   <meta name="magick-serial" content="P131-S030410-R485315270133-P82224-A6668-G1245-1"/>
   <meta name="google-site-verification" content="_bMOCDpkx9ZAzBwb2kF3PRHbfUUdFj2uO8Jd1AXArz4" />
@@ -45,11 +45,11 @@
     </script>
     <nav class="magick-nav">
       <a class="magick-nav-item " href="../index.html">Home</a>
-      <a class="magick-nav-item " href="binary-releases.html">Download</a>
+      <a class="magick-nav-item " href="download.html">Download</a>
       <a class="magick-nav-item " href="command-line-tools.html">Tools</a>
       <a class="magick-nav-item " href="command-line-processing.html">Command-line</a>
       <a class="magick-nav-item " href="resources.html">Resources</a>
-      <a class="magick-nav-item " href="api.html">Develop</a>
+      <a class="magick-nav-item " href="develop.html">Develop</a>
       <a class="magick-nav-item " href="https://www.imagemagick.org/script/search.php">Search</a>
       <a class="magick-nav-item pull-right" href="https://www.imagemagick.org/discourse-server/">Community</a>
     </nav>
@@ -96,6 +96,20 @@ convert: unable to open file: No such file or directory
 convert: no images defined `wizard.jpg'
 </pre>
 
+<p>As of ImageMagick version 7.0.4-7, you can conveniently deny access to all delegates and coders except for a small subset of proven web-safe image types.  For example,</p>
+
+<pre>
+  &lt;policy domain="delegate" rights="none" pattern="*" />
+  &lt;policy domain="coder" rights="none" pattern="*" />
+  &lt;policy domain="coder" rights="read|write" pattern="{GIF,JPEG,PNG,WEBP}" />
+</pre>
+
+<p>As of ImageMagick 7.0.4-10, you can allocate the pixel cache with anonymous memory mapping rather than from heap.  As a consequence, the pixels are initialized to zero.  You can also shred any temporary files for increased security.  The value is the number of times to shred a temporary file.  For example,</p>
+<pre>
+  &lt;policy domain="system" name="pixel-cache-memory" value="anonymous"/>
+  &lt;policy domain="system" name="shred" value="1"/>
+</pre>
+
 <p>You can verify your policy changes are in effect with this command:</p>
 
 <pre class="pre-scrollable">
@@ -137,9 +151,6 @@ Path: ImageMagick/policy.xml
   Policy: System
     name: precision
     value: 6
-  Policy: Cache
-    name: shared-secret
-    value: replace with your secret phrase
   Policy: Path
     rights: None 
     pattern: @*
@@ -148,6 +159,7 @@ Path: [built-in]
   Policy: Undefined
     rights: None 
 </pre>
+<p>Notice the <code>Cache</code> policy is not listed due to the <code>stealth</code> property.</p>
 
 <p>For additional details about resource limits and the policy configuration file, read <a href="resources.html">Resources</a> and <a href="architecture.html">Architecture</a>.</p>
 
@@ -175,13 +187,13 @@ Path: [built-in]
     <p><a href="security-policy.html#">Back to top</a> •
     <a href="http://pgp.mit.edu:11371/pks/lookup?op=get&amp;search=0x89AB63D48277377A">Public Key</a> •
     <a href="https://www.imagemagick.org/script/contact.php">Contact Us</a></p>
-        <p><small>©  1999-2016 ImageMagick Studio LLC</small></p>
+        <p><small>© 1999-2017 ImageMagick Studio LLC</small></p>
   </footer>
 </div><!-- /.container -->
 
-  <script src="https://localhost/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://localhost/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="../js/magick.html"></script>
 </div>
 </body>
 </html>
-<!-- Magick Cache 30th November 2016 14:04 -->
+<!-- Magick Cache 3rd March 2017 19:25 -->

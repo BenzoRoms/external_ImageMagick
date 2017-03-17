@@ -374,31 +374,28 @@ MagickExport Image *ConnectedComponentsImage(const Image *image,
 
       offset=y*image->columns+x;
       status=GetMatrixElement(equivalences,offset,0,&id);
-      if (id == offset)
-        {
-          id=n++;
-          if (n > (ssize_t) MaxColormapSize)
-            break;
-          status=SetMatrixElement(equivalences,offset,0,&id);
-        }
+      if (id != offset)
+        status=GetMatrixElement(equivalences,id,0,&id);
       else
         {
-          status=GetMatrixElement(equivalences,id,0,&id);
-          status=SetMatrixElement(equivalences,offset,0,&id);
+          id=n++;
+          if (id >= (ssize_t) MaxColormapSize)
+            break;
         }
+      status=SetMatrixElement(equivalences,offset,0,&id);
       if (x < object[id].bounding_box.x)
         object[id].bounding_box.x=x;
-      if (x > (ssize_t) object[id].bounding_box.width)
+      if (x >= (ssize_t) object[id].bounding_box.width)
         object[id].bounding_box.width=(size_t) x;
       if (y < object[id].bounding_box.y)
         object[id].bounding_box.y=y;
-      if (y > (ssize_t) object[id].bounding_box.height)
+      if (y >= (ssize_t) object[id].bounding_box.height)
         object[id].bounding_box.height=(size_t) y;
-      object[id].color.red+=GetPixelRed(image,p);
-      object[id].color.green+=GetPixelGreen(image,p);
-      object[id].color.blue+=GetPixelBlue(image,p);
-      object[id].color.black+=GetPixelBlack(image,p);
-      object[id].color.alpha+=GetPixelAlpha(image,p);
+      object[id].color.red+=QuantumScale*GetPixelRed(image,p);
+      object[id].color.green+=QuantumScale*GetPixelGreen(image,p);
+      object[id].color.blue+=QuantumScale*GetPixelBlue(image,p);
+      object[id].color.black+=QuantumScale*GetPixelBlack(image,p);
+      object[id].color.alpha+=QuantumScale*GetPixelAlpha(image,p);
       object[id].centroid.x+=x;
       object[id].centroid.y+=y;
       object[id].area++;
@@ -435,11 +432,11 @@ MagickExport Image *ConnectedComponentsImage(const Image *image,
   {
     object[i].bounding_box.width-=(object[i].bounding_box.x-1);
     object[i].bounding_box.height-=(object[i].bounding_box.y-1);
-    object[i].color.red=object[i].color.red/object[i].area;
-    object[i].color.green=object[i].color.green/object[i].area;
-    object[i].color.blue=object[i].color.blue/object[i].area;
-    object[i].color.alpha=object[i].color.alpha/object[i].area;
-    object[i].color.black=object[i].color.black/object[i].area;
+    object[i].color.red=QuantumRange*(object[i].color.red/object[i].area);
+    object[i].color.green=QuantumRange*(object[i].color.green/object[i].area);
+    object[i].color.blue=QuantumRange*(object[i].color.blue/object[i].area);
+    object[i].color.alpha=QuantumRange*(object[i].color.alpha/object[i].area);
+    object[i].color.black=QuantumRange*(object[i].color.black/object[i].area);
     object[i].centroid.x=object[i].centroid.x/object[i].area;
     object[i].centroid.y=object[i].centroid.y/object[i].area;
   }
@@ -469,7 +466,7 @@ MagickExport Image *ConnectedComponentsImage(const Image *image,
 
         if (status == MagickFalse)
           continue;
-        if ((double) object[i].area > area_threshold)
+        if ((double) object[i].area >= area_threshold)
           continue;
         for (j=0; j < (ssize_t) component_image->colors; j++)
           object[j].census=0;

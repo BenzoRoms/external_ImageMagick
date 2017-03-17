@@ -711,6 +711,7 @@ static Image *ReadMATImageV4(const ImageInfo *image_info,Image *image,
       case 3:
         format_type=SignedQuantumFormat;
         depth=16;
+        break;
       case 4:
         format_type=UnsignedQuantumFormat;
         depth=8;
@@ -1122,6 +1123,7 @@ RestoreMSCWarning
     BImgBuff = (unsigned char *) AcquireQuantumMemory((size_t) (ldblk),sizeof(double));    /* Ldblk was set in the check phase */
     if (BImgBuff == NULL)
       ThrowReaderException(ResourceLimitError,"MemoryAllocationFailed");
+    (void) ResetMagickMemory(BImgBuff,0,ldblk*sizeof(double));
 
     MinVal = 0;
     MaxVal = 0;
@@ -1371,7 +1373,7 @@ ModuleExport size_t RegisterMATImage(void)
   entry->decoder=(DecodeImageHandler *) ReadMATImage;
   entry->encoder=(EncodeImageHandler *) WriteMATImage;
   entry->flags^=CoderBlobSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);
 }

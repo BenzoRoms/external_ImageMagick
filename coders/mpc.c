@@ -66,6 +66,7 @@
 #include "MagickCore/profile.h"
 #include "MagickCore/property.h"
 #include "MagickCore/quantum-private.h"
+#include "MagickCore/resource_.h"
 #include "MagickCore/static.h"
 #include "MagickCore/statistic.h"
 #include "MagickCore/string_.h"
@@ -338,12 +339,6 @@ static Image *ReadMPCImage(const ImageInfo *image_info,ExceptionInfo *exception)
               case 'a':
               case 'A':
               {
-                if (LocaleCompare(keyword,"alpha-color") == 0)
-                  {
-                    (void) QueryColorCompliance(options,AllCompliance,
-                      &image->alpha_color,exception);
-                    break;
-                  }
                 if (LocaleCompare(keyword,"alpha-trait") == 0)
                   {
                     ssize_t
@@ -536,6 +531,12 @@ static Image *ReadMPCImage(const ImageInfo *image_info,ExceptionInfo *exception)
                     signature=(unsigned int) StringToUnsignedLong(options);
                     break;
                   }
+                if (LocaleCompare(keyword,"mattecolor") == 0)
+                  {
+                    (void) QueryColorCompliance(options,AllCompliance,
+                      &image->matte_color,exception);
+                    break;
+                  }
                 if (LocaleCompare(keyword,"maximum-error") == 0)
                   {
                     image->error.normalized_maximum_error=StringToDouble(
@@ -554,6 +555,21 @@ static Image *ReadMPCImage(const ImageInfo *image_info,ExceptionInfo *exception)
                     break;
                   }
                 (void) SetImageProperty(image,keyword,options,exception);
+                break;
+              }
+              case 'n':
+              case 'N':
+              {
+                if (LocaleCompare(keyword,"number-channels") == 0)
+                  {
+                    image->number_channels=StringToUnsignedLong(options);
+                    break;
+                  }
+                if (LocaleCompare(keyword,"number-meta-channels") == 0)
+                  {
+                    image->number_meta_channels=StringToUnsignedLong(options);
+                    break;
+                  }
                 break;
               }
               case 'o':
@@ -834,7 +850,9 @@ static Image *ReadMPCImage(const ImageInfo *image_info,ExceptionInfo *exception)
         /*
           Create image colormap.
         */
-        if (AcquireImageColormap(image,image->colors,exception) == MagickFalse)
+        image->colormap=(PixelInfo *) AcquireQuantumMemory(image->colors+1,
+          sizeof(*image->colormap));
+        if (image->colormap == (PixelInfo *) NULL)
           ThrowReaderException(ResourceLimitError,"MemoryAllocationFailed");
         if (image->colors != 0)
           {
@@ -923,9 +941,9 @@ static Image *ReadMPCImage(const ImageInfo *image_info,ExceptionInfo *exception)
     if ((image_info->ping != MagickFalse) && (image_info->number_scenes != 0))
       if (image->scene >= (image_info->scene+image_info->number_scenes-1))
         break;
-    status=SetImageExtent(image,image->columns,image->rows,exception);
-    if (status == MagickFalse)
-      return(DestroyImageList(image));
+    if ((AcquireMagickResource(WidthResource,image->columns) == MagickFalse) ||
+        (AcquireMagickResource(HeightResource,image->rows) == MagickFalse))
+      ThrowReaderException(ImageError,"WidthOrHeightExceedsLimit");
     /*
       Attach persistent pixel cache.
     */
@@ -1115,6 +1133,10 @@ static MagickBooleanType WriteMPCImage(const ImageInfo *image_info,Image *image,
       image->alpha_trait));
     (void) WriteBlobString(image,buffer);
     (void) FormatLocaleString(buffer,MagickPathExtent,
+      "number-channels=%.20g  number-meta-channels=%.20g\n",
+      (double) image->number_channels,(double) image->number_meta_channels);
+    (void) WriteBlobString(image,buffer);
+    (void) FormatLocaleString(buffer,MagickPathExtent,
       "columns=%.20g  rows=%.20g depth=%.20g\n",(double) image->columns,
       (double) image->rows,(double) image->depth);
     (void) WriteBlobString(image,buffer);
@@ -1124,12 +1146,9 @@ static MagickBooleanType WriteMPCImage(const ImageInfo *image_info,Image *image,
           CommandOptionToMnemonic(MagickTypeOptions,image->type));
         (void) WriteBlobString(image,buffer);
       }
-    if (image->colorspace != UndefinedColorspace)
-      {
-        (void) FormatLocaleString(buffer,MagickPathExtent,"colorspace=%s\n",
-          CommandOptionToMnemonic(MagickColorspaceOptions,image->colorspace));
-        (void) WriteBlobString(image,buffer);
-      }
+    (void) FormatLocaleString(buffer,MagickPathExtent,"colorspace=%s\n",
+      CommandOptionToMnemonic(MagickColorspaceOptions,image->colorspace));
+    (void) WriteBlobString(image,buffer);
     if (image->intensity != UndefinedPixelIntensityMethod)
       {
         (void) FormatLocaleString(buffer,MagickPathExtent,

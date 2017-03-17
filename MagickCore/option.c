@@ -159,6 +159,7 @@ static const OptionInfo
     { "M", MagentaChannel, UndefinedOptionFlag, MagickFalse },
     { "Magenta", MagentaChannel, UndefinedOptionFlag, MagickFalse },
     { "Matte", AlphaChannel, DeprecateOptionFlag, MagickTrue },/*depreciate*/
+    { "Meta", MetaChannel, UndefinedOptionFlag, MagickFalse },
     { "Opacity", AlphaChannel, DeprecateOptionFlag, MagickTrue },/*depreciate*/
     { "R", RedChannel, UndefinedOptionFlag, MagickFalse },
     { "Red", RedChannel, UndefinedOptionFlag, MagickFalse },
@@ -172,6 +173,32 @@ static const OptionInfo
     { "3", 3, UndefinedOptionFlag, MagickFalse },
     { "4", 4, UndefinedOptionFlag, MagickFalse },
     { "5", 5, UndefinedOptionFlag, MagickFalse },
+    { "6", 6, UndefinedOptionFlag, MagickFalse },
+    { "7", 7, UndefinedOptionFlag, MagickFalse },
+    { "8", 8, UndefinedOptionFlag, MagickFalse },
+    { "9", 9, UndefinedOptionFlag, MagickFalse },
+    { "10", 10, UndefinedOptionFlag, MagickFalse },
+    { "11", 11, UndefinedOptionFlag, MagickFalse },
+    { "12", 12, UndefinedOptionFlag, MagickFalse },
+    { "13", 13, UndefinedOptionFlag, MagickFalse },
+    { "14", 14, UndefinedOptionFlag, MagickFalse },
+    { "15", 15, UndefinedOptionFlag, MagickFalse },
+    { "16", 16, UndefinedOptionFlag, MagickFalse },
+    { "17", 17, UndefinedOptionFlag, MagickFalse },
+    { "18", 18, UndefinedOptionFlag, MagickFalse },
+    { "19", 19, UndefinedOptionFlag, MagickFalse },
+    { "20", 20, UndefinedOptionFlag, MagickFalse },
+    { "21", 21, UndefinedOptionFlag, MagickFalse },
+    { "22", 22, UndefinedOptionFlag, MagickFalse },
+    { "23", 23, UndefinedOptionFlag, MagickFalse },
+    { "24", 24, UndefinedOptionFlag, MagickFalse },
+    { "25", 25, UndefinedOptionFlag, MagickFalse },
+    { "26", 26, UndefinedOptionFlag, MagickFalse },
+    { "27", 27, UndefinedOptionFlag, MagickFalse },
+    { "28", 28, UndefinedOptionFlag, MagickFalse },
+    { "29", 29, UndefinedOptionFlag, MagickFalse },
+    { "30", 30, UndefinedOptionFlag, MagickFalse },
+    { "31", 31, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedChannel, UndefinedOptionFlag, MagickFalse }
   },
   ClassOptions[] =
@@ -281,8 +308,8 @@ static const OptionInfo
     { "-affine", 1L, ReplacedOptionFlag | DrawInfoOptionFlag, MagickTrue },
     { "+affinity", 0L, DeprecateOptionFlag, MagickTrue },
     { "-affinity", 1L, DeprecateOptionFlag | FireOptionFlag, MagickTrue },
-    { "+alpha-color", 0L, ImageInfoOptionFlag, MagickFalse },
-    { "-alpha-color", 1L, ImageInfoOptionFlag, MagickFalse },
+    { "+mattecolor", 0L, ImageInfoOptionFlag, MagickFalse },
+    { "-mattecolor", 1L, ImageInfoOptionFlag, MagickFalse },
     { "+annotate", 0L, DeprecateOptionFlag, MagickTrue },
     { "-annotate", 2L, SimpleOperatorFlag | AlwaysInterpretArgsFlag, MagickFalse },
     { "-antialias", 0L, ImageInfoOptionFlag | DrawInfoOptionFlag, MagickFalse },
@@ -1503,6 +1530,7 @@ static const OptionInfo
     { "K", BlackPixelChannel, UndefinedOptionFlag, MagickFalse },
     { "M", MagentaPixelChannel, UndefinedOptionFlag, MagickFalse },
     { "Magenta", MagentaPixelChannel, UndefinedOptionFlag, MagickFalse },
+    { "Meta", MetaPixelChannel, UndefinedOptionFlag, MagickFalse },
     { "R", RedPixelChannel, UndefinedOptionFlag, MagickFalse },
     { "ReadMask", ReadMaskPixelChannel, UndefinedOptionFlag, MagickFalse },
     { "Red", RedPixelChannel, UndefinedOptionFlag, MagickFalse },
@@ -1559,10 +1587,11 @@ static const OptionInfo
   PolicyRightsOptions[] =
   {
     { "Undefined", UndefinedPolicyRights, UndefinedOptionFlag, MagickTrue },
+    { "All", AllPolicyRights, UndefinedOptionFlag, MagickFalse },
+    { "Execute", ExecutePolicyRights, UndefinedOptionFlag, MagickFalse },
     { "None", NoPolicyRights, UndefinedOptionFlag, MagickFalse },
     { "Read", ReadPolicyRights, UndefinedOptionFlag, MagickFalse },
     { "Write", WritePolicyRights, UndefinedOptionFlag, MagickFalse },
-    { "Execute", ExecutePolicyRights, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedPolicyRights, UndefinedOptionFlag, MagickFalse }
   },
   PreviewOptions[] =
@@ -1633,6 +1662,9 @@ static const OptionInfo
     { "Undefined", UndefinedResolution, UndefinedOptionFlag, MagickTrue },
     { "PixelsPerInch", PixelsPerInchResolution, UndefinedOptionFlag, MagickFalse },
     { "PixelsPerCentimeter", PixelsPerCentimeterResolution, UndefinedOptionFlag, MagickFalse },
+    { "1", UndefinedResolution, UndefinedOptionFlag, MagickFalse },
+    { "2", PixelsPerInchResolution, UndefinedOptionFlag, MagickFalse },
+    { "3", PixelsPerCentimeterResolution, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedResolution, UndefinedOptionFlag, MagickFalse }
   },
   ResourceOptions[] =
@@ -1645,6 +1677,7 @@ static const OptionInfo
     { "Map", MapResource, UndefinedOptionFlag, MagickFalse },
     { "Memory", MemoryResource, UndefinedOptionFlag, MagickFalse },
     { "Thread", ThreadResource, UndefinedOptionFlag, MagickFalse },
+    { "Throttle", ThrottleResource, UndefinedOptionFlag, MagickFalse },
     { "Time", TimeResource, UndefinedOptionFlag, MagickFalse },
     { "Width", WidthResource, UndefinedOptionFlag, MagickFalse },
     { (char *) NULL, UndefinedResource, UndefinedOptionFlag, MagickFalse }

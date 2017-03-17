@@ -168,6 +168,8 @@ static const MagicMapInfo
     { "PAM", 0, MagicPattern("P7") },
     { "PFM", 0, MagicPattern("PF") },
     { "PFM", 0, MagicPattern("Pf") },
+    { "PGX", 0, MagicPattern("PG ML") },
+    { "PGX", 0, MagicPattern("PG LM") },
     { "PS", 0, MagicPattern("%!") },
     { "PS", 0, MagicPattern("\004%!") },
     { "PS", 0, MagicPattern("\305\320\323\306") },
@@ -942,7 +944,8 @@ static MagickBooleanType LoadMagicCache(LinkedListInfo *cache,const char *xml,
       }
     if (magic_info == (MagicInfo *) NULL)
       continue;
-    if (LocaleCompare(keyword,"/>") == 0)
+    if ((LocaleCompare(keyword,"/>") == 0) ||
+        (LocaleCompare(keyword,"</policy>") == 0))
       {
         status=InsertValueInSortedLinkedList(cache,CompareMagickInfoSize,
           NULL,magic_info);

@@ -365,6 +365,8 @@ static Image *ReadGROUP4Image(const ImageInfo *image_info,
   if ((unique_file == -1) || (file == (FILE *) NULL))
     ThrowImageException(FileOpenError,"UnableToCreateTemporaryFile");
   length=fwrite("\111\111\052\000\010\000\000\000\016\000",1,10,file);
+  if (length != 10)
+    ThrowReaderException(CorruptImageError,"UnexpectedEndOfFile");
   length=fwrite("\376\000\003\000\001\000\000\000\000\000\000\000",1,12,file);
   length=fwrite("\000\001\004\000\001\000\000\000",1,8,file);
   length=WriteLSBLong(file,image->columns);
@@ -397,6 +399,11 @@ static Image *ReadGROUP4Image(const ImageInfo *image_info,
       status=MagickFalse;
   offset=(ssize_t) fseek(file,(ssize_t) offset,SEEK_SET);
   length=WriteLSBLong(file,(unsigned int) length);
+  if (ferror(file) != 0)
+    {
+      (void) fclose(file);
+      ThrowImageException(FileOpenError,"UnableToCreateTemporaryFile");
+    }
   (void) fclose(file);
   (void) CloseBlob(image);
   image=DestroyImage(image);
@@ -1584,9 +1591,13 @@ RestoreMSCWarning
         (void) SetImageProperty(image,"tiff:rows-per-strip",value,exception);
       }
     if ((samples_per_pixel >= 3) && (interlace == PLANARCONFIG_CONTIG))
-      method=ReadRGBAMethod;
+      if ((image->alpha_trait == UndefinedPixelTrait) ||
+          (samples_per_pixel >= 4))
+        method=ReadRGBAMethod;
     if ((samples_per_pixel >= 4) && (interlace == PLANARCONFIG_SEPARATE))
-      method=ReadCMYKAMethod;
+      if ((image->alpha_trait == UndefinedPixelTrait) ||
+          (samples_per_pixel >= 5))
+        method=ReadCMYKAMethod;
     if ((photometric != PHOTOMETRIC_RGB) &&
         (photometric != PHOTOMETRIC_CIELAB) &&
         (photometric != PHOTOMETRIC_SEPARATED))
@@ -1608,8 +1619,9 @@ RestoreMSCWarning
       method=ReadTileMethod;
     quantum_info->endian=LSBEndian;
     quantum_type=RGBQuantum;
-    tiff_pixels=(unsigned char *) AcquireMagickMemory(TIFFScanlineSize(tiff)+
-      sizeof(uint32));
+    tiff_pixels=(unsigned char *) AcquireMagickMemory(MagickMax(
+      TIFFScanlineSize(tiff),(size_t) (image->columns*samples_per_pixel*
+      pow(2.0,ceil(log(bits_per_sample)/log(2.0))))));
     if (tiff_pixels == (unsigned char *) NULL)
       {
         TIFFClose(tiff);
@@ -2304,7 +2316,8 @@ ModuleExport size_t RegisterTIFFImage(void)
 #endif
   entry->flags|=CoderRawSupportFlag;
   entry->flags|=CoderEndianSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   entry->flags^=CoderAdjoinFlag;
   entry->flags^=CoderUseExtensionFlag;
   entry->format_type=ImplicitFormatType;
@@ -2316,7 +2329,8 @@ ModuleExport size_t RegisterTIFFImage(void)
   entry->encoder=(EncodeImageHandler *) WritePTIFImage;
 #endif
   entry->flags|=CoderEndianSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   entry->flags^=CoderUseExtensionFlag;
   entry->mime_type=ConstantString("image/tiff");
   (void) RegisterMagickInfo(entry);
@@ -2326,7 +2340,8 @@ ModuleExport size_t RegisterTIFFImage(void)
   entry->encoder=(EncodeImageHandler *) WriteTIFFImage;
 #endif
   entry->flags|=CoderEndianSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   entry->flags|=CoderStealthFlag;
   entry->flags^=CoderUseExtensionFlag;
   if (*version != '\0')
@@ -2340,7 +2355,8 @@ ModuleExport size_t RegisterTIFFImage(void)
 #endif
   entry->magick=(IsImageFormatHandler *) IsTIFF;
   entry->flags|=CoderEndianSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   entry->flags^=CoderUseExtensionFlag;
   if (*version != '\0')
     entry->version=ConstantString(version);
@@ -2352,7 +2368,8 @@ ModuleExport size_t RegisterTIFFImage(void)
   entry->encoder=(EncodeImageHandler *) WriteTIFFImage;
 #endif
   entry->flags|=CoderEndianSupportFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
   entry->flags^=CoderAdjoinFlag;
   entry->flags^=CoderUseExtensionFlag;
   if (*version != '\0')

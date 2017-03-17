@@ -8917,7 +8917,7 @@ static Image *XMagickCommand(Display *display,XResourceInfo *resource_info,
         exception);
       XSetCursorState(display,windows,MagickTrue);
       XCheckRefreshWindows(display,windows);
-      (void) QueryColorCompliance(color,AllCompliance,&(*image)->alpha_color,
+      (void) QueryColorCompliance(color,AllCompliance,&(*image)->matte_color,
         exception);
       (void) ParsePageGeometry(*image,geometry,&page_geometry,
         exception);
@@ -14731,7 +14731,8 @@ MagickExport Image *XDisplayImage(Display *display,XResourceInfo *resource_info,
           "%s: %s[scene: %.20g frames: %.20g]",MagickPackageName,filename,
           (double) display_image->scene,(double) GetImageListLength(
           display_image));
-      (void) CopyMagickString(windows->image.icon_name,filename,MagickPathExtent);
+      (void) CopyMagickString(windows->image.icon_name,filename,
+        MagickPathExtent);
     }
   if (resource_info->immutable)
     windows->image.immutable=MagickTrue;

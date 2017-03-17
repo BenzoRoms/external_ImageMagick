@@ -504,6 +504,7 @@ static Image *ReadJP2Image(const ImageInfo *image_info,ExceptionInfo *exception)
   opj_destroy_codec(jp2_codec);
   opj_image_destroy(jp2_image);
   opj_destroy_cstr_index(&codestream_index);
+  (void) CloseBlob(image);
   return(GetFirstImageInList(image));
 }
 #endif
@@ -548,7 +549,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJP2;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;
@@ -560,7 +562,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJ2K;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;
@@ -572,7 +575,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJ2K;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;
@@ -584,7 +588,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJP2;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;
@@ -596,7 +601,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJP2;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;
@@ -608,7 +614,8 @@ ModuleExport size_t RegisterJP2Image(void)
   entry->mime_type=ConstantString("image/jp2");
   entry->magick=(IsImageFormatHandler *) IsJP2;
   entry->flags^=CoderAdjoinFlag;
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
+  entry->flags|=CoderEncoderSeekableStreamFlag;
 #if defined(MAGICKCORE_LIBOPENJP2_DELEGATE)
   entry->decoder=(DecodeImageHandler *) ReadJP2Image;
   entry->encoder=(EncodeImageHandler *) WriteJP2Image;

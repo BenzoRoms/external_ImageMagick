@@ -17,13 +17,13 @@
 %                               December 2000                                 %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -827,7 +827,8 @@ static void ipa_device_close(wmfAPI * API)
 static void ipa_device_begin(wmfAPI * API)
 {
   char
-    comment[MagickPathExtent];
+    comment[MagickPathExtent],
+    *url;
 
   wmf_magick_t
     *ddata = WMF_MAGICK_GetData(API);
@@ -835,10 +836,12 @@ static void ipa_device_begin(wmfAPI * API)
   /* Make SVG output happy */
   (void) PushDrawingWand(WmfDrawingWand);
 
-  DrawSetViewbox(WmfDrawingWand, 0, 0, ddata->image->columns, ddata->image->rows );
+  DrawSetViewbox(WmfDrawingWand,0,0,ddata->image->columns,ddata->image->rows);
 
-  (void) FormatLocaleString(comment,MagickPathExtent,"Created by ImageMagick %s",
-    GetMagickVersion((size_t *) NULL));
+  url=GetMagickHomeURL();
+  (void) FormatLocaleString(comment,MagickPathExtent,
+    "Created by ImageMagick %s",url);
+  url=DestroyString(url);
   DrawComment(WmfDrawingWand,comment);
 
   /* Scale width and height to image */
@@ -2949,7 +2952,7 @@ ModuleExport size_t RegisterWMFImage(void)
 #if defined(MAGICKCORE_SANS_DELEGATE) || defined(MAGICKCORE_WMF_DELEGATE)
   entry->decoder=ReadWMFImage;
 #endif
-  entry->flags|=CoderSeekableStreamFlag;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("WMF","WMF","Windows Meta File");
 #if defined(MAGICKCORE_SANS_DELEGATE) || defined(MAGICKCORE_WMF_DELEGATE)

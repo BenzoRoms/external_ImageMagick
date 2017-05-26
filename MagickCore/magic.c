@@ -17,13 +17,13 @@
 %                                 July 2000                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -168,6 +168,8 @@ static const MagicMapInfo
     { "PAM", 0, MagicPattern("P7") },
     { "PFM", 0, MagicPattern("PF") },
     { "PFM", 0, MagicPattern("Pf") },
+    { "PGX", 0, MagicPattern("PG ML") },
+    { "PGX", 0, MagicPattern("PG LM") },
     { "PS", 0, MagicPattern("%!") },
     { "PS", 0, MagicPattern("\004%!") },
     { "PS", 0, MagicPattern("\305\320\323\306") },
@@ -198,9 +200,7 @@ static const MagicMapInfo
     { "XBM", 0, MagicPattern("#define") },
     { "XCF", 0, MagicPattern("gimp xcf") },
     { "XEF", 0, MagicPattern("FOVb") },
-    { "XPM", 1, MagicPattern("* XPM *") },
-    { "XWD", 4, MagicPattern("\007\000\000") },
-    { "XWD", 5, MagicPattern("\000\000\007") }
+    { "XPM", 1, MagicPattern("* XPM *") }
  };
 
 static LinkedListInfo
@@ -944,7 +944,8 @@ static MagickBooleanType LoadMagicCache(LinkedListInfo *cache,const char *xml,
       }
     if (magic_info == (MagicInfo *) NULL)
       continue;
-    if (LocaleCompare(keyword,"/>") == 0)
+    if ((LocaleCompare(keyword,"/>") == 0) ||
+        (LocaleCompare(keyword,"</policy>") == 0))
       {
         status=InsertValueInSortedLinkedList(cache,CompareMagickInfoSize,
           NULL,magic_info);

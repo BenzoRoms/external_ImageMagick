@@ -16,13 +16,13 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -179,7 +179,10 @@ static LinkedListInfo *AcquirePolicyCache(const char *filename,
   if (cache == (LinkedListInfo *) NULL)
     ThrowFatalException(ResourceLimitFatalError,"MemoryAllocationFailed");
   status=MagickTrue;
-#if !defined(MAGICKCORE_ZERO_CONFIGURATION_SUPPORT)
+#if defined(MAGICKCORE_ZERO_CONFIGURATION_SUPPORT)
+  status=LoadPolicyCache(cache,ZeroConfigurationPolicy,"[zero-configuration]",0,
+    exception);
+#else
   {
     const StringInfo
       *option;
@@ -191,8 +194,8 @@ static LinkedListInfo *AcquirePolicyCache(const char *filename,
     option=(const StringInfo *) GetNextValueInLinkedList(options);
     while (option != (const StringInfo *) NULL)
     {
-      status&=LoadPolicyCache(cache,(const char *)
-        GetStringInfoDatum(option),GetStringInfoPath(option),0,exception);
+      status&=LoadPolicyCache(cache,(const char *) GetStringInfoDatum(option),
+        GetStringInfoPath(option),0,exception);
       option=(const StringInfo *) GetNextValueInLinkedList(options);
     }
     options=DestroyConfigureOptions(options);
@@ -264,6 +267,9 @@ static PolicyInfo *GetPolicyInfo(const char *name,ExceptionInfo *exception)
   char
     policyname[MagickPathExtent];
 
+  PolicyDomain
+    domain;
+
   register PolicyInfo
     *p;
 
@@ -287,6 +293,20 @@ static PolicyInfo *GetPolicyInfo(const char *name,ExceptionInfo *exception)
     q--;
   }
   /*
+    Strip domain from policy name (e.g. resource:map).
+  */
+  domain=UndefinedPolicyDomain;
+  for (q=policyname; *q != '\0'; q++)
+  {
+    if (*q != ':')
+      continue;
+    *q='\0';
+    domain=(PolicyDomain) ParseCommandOption(MagickPolicyDomainOptions,
+      MagickTrue,policyname);
+    (void) CopyMagickString(policyname,q+1,MagickPathExtent);
+    break;
+  }
+  /*
     Search for policy tag.
   */
   LockSemaphoreInfo(policy_semaphore);
@@ -299,8 +319,9 @@ static PolicyInfo *GetPolicyInfo(const char *name,ExceptionInfo *exception)
     }
   while (p != (PolicyInfo *) NULL)
   {
-    if (LocaleCompare(policyname,p->name) == 0)
-      break;
+    if ((domain == UndefinedPolicyDomain) || (p->domain == domain))
+      if (LocaleCompare(policyname,p->name) == 0)
+        break;
     p=(PolicyInfo *) GetNextValueInLinkedList(policy_cache);
   }
   if (p != (PolicyInfo *) NULL)
@@ -593,20 +614,20 @@ MagickExport MagickBooleanType IsRightsAuthorized(const PolicyDomain domain,
   LockSemaphoreInfo(policy_semaphore);
   ResetLinkedListIterator(policy_cache);
   p=(PolicyInfo *) GetNextValueInLinkedList(policy_cache);
-  while ((p != (PolicyInfo *) NULL) && (authorized != MagickFalse))
+  while (p != (PolicyInfo *) NULL)
   {
     if ((p->domain == domain) &&
         (GlobExpression(pattern,p->pattern,MagickFalse) != MagickFalse))
       {
-        if (((rights & ReadPolicyRights) != 0) &&
-            ((p->rights & ReadPolicyRights) == 0))
-          authorized=MagickFalse;
-        if (((rights & WritePolicyRights) != 0) &&
-            ((p->rights & WritePolicyRights) == 0))
-          authorized=MagickFalse;
-        if (((rights & ExecutePolicyRights) != 0) &&
-            ((p->rights & ExecutePolicyRights) == 0))
-          authorized=MagickFalse;
+        if ((rights & ReadPolicyRights) != 0)
+          authorized=(p->rights & ReadPolicyRights) != 0 ? MagickTrue :
+            MagickFalse;
+        if ((rights & WritePolicyRights) != 0)
+          authorized=(p->rights & WritePolicyRights) != 0 ? MagickTrue :
+            MagickFalse;
+        if ((rights & ExecutePolicyRights) != 0)
+          authorized=(p->rights & ExecutePolicyRights) != 0 ? MagickTrue :
+            MagickFalse;
       }
     p=(PolicyInfo *) GetNextValueInLinkedList(policy_cache);
   }
@@ -853,7 +874,8 @@ static MagickBooleanType LoadPolicyCache(LinkedListInfo *cache,const char *xml,
       }
     if (policy_info == (PolicyInfo *) NULL)
       continue;
-    if (LocaleCompare(keyword,"/>") == 0)
+    if ((LocaleCompare(keyword,"/>") == 0) ||
+        (LocaleCompare(keyword,"</policy>") == 0))
       {
         status=AppendValueToLinkedList(cache,policy_info);
         if (status == MagickFalse)

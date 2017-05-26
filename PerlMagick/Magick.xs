@@ -23,7 +23,7 @@
 %                             February 1997                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
@@ -563,6 +563,7 @@ static struct
     { "WaveletDenoise", {  {"geometry", StringReference},
       {"threshold", RealReference}, {"softness", RealReference},
       {"channel", MagickChannelOptions} } },
+    { "Colorspace", { {"colorspace", MagickColorspaceOptions} } },
   };
 
 static SplayTreeInfo
@@ -1182,7 +1183,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'B':
@@ -1224,7 +1228,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'C':
@@ -1299,8 +1306,7 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
               break;
             }
           for ( ; image; image=image->next)
-            (void) TransformImageColorspace(image,(ColorspaceType) sp,
-              exception);
+            (void) SetImageColorspace(image,(ColorspaceType) sp,exception);
           break;
         }
       if (LocaleCompare(attribute,"comment") == 0)
@@ -1330,7 +1336,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'D':
@@ -1433,7 +1442,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'E':
@@ -1466,7 +1478,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'F':
@@ -1536,7 +1551,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'G':
@@ -1580,7 +1598,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'I':
@@ -1647,7 +1668,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'L':
@@ -1666,7 +1690,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'M':
@@ -1675,10 +1702,11 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (LocaleCompare(attribute,"magick") == 0)
         {
           if (info)
-            (void) FormatLocaleString(info->image_info->filename,MagickPathExtent,
-              "%s:",SvPV(sval,na));
+            (void) FormatLocaleString(info->image_info->filename,
+              MagickPathExtent,"%s:",SvPV(sval,na));
           for ( ; image; image=image->next)
-            (void) CopyMagickString(image->magick,SvPV(sval,na),MagickPathExtent);
+            (void) CopyMagickString(image->magick,SvPV(sval,na),
+              MagickPathExtent);
           break;
         }
       if (LocaleCompare(attribute,"map-limit") == 0)
@@ -1760,7 +1788,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'O':
@@ -1791,7 +1822,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'P':
@@ -1878,7 +1912,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'Q':
@@ -1895,7 +1932,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'R':
@@ -1983,7 +2023,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'S':
@@ -2033,7 +2076,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'T':
@@ -2112,7 +2158,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'U':
@@ -2166,7 +2215,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'V':
@@ -2203,7 +2255,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     case 'W':
@@ -2237,7 +2292,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
     default:
@@ -2245,7 +2303,10 @@ static void SetAttribute(pTHX_ struct PackageInfo *info,Image *image,
       if (info)
         SetImageOption(info->image_info,attribute,SvPV(sval,na));
       for ( ; image; image=image->next)
-        SetImageProperty(image,attribute,SvPV(sval,na),exception);
+      {
+        (void) SetImageProperty(image,attribute,SvPV(sval,na),exception);
+        (void) SetImageArtifact(image,attribute,SvPV(sval,na));
+      }
       break;
     }
   }
@@ -4075,46 +4136,46 @@ Features(ref,...)
   {
 #define ChannelFeatures(channel,direction) \
 { \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].angular_second_moment[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].contrast[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].contrast[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].variance_sum_of_squares[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].inverse_difference_moment[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_average[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_variance[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].sum_entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].difference_variance[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].difference_entropy[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].measure_of_correlation_1[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].measure_of_correlation_2[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_features[channel].maximum_correlation_coefficient[direction]); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
 }
@@ -4201,20 +4262,24 @@ Features(ref,...)
     count=0;
     for ( ; image; image=image->next)
     {
+      register ssize_t
+        j;
+
       channel_features=GetImageFeatures(image,distance,exception);
       if (channel_features == (ChannelFeatures *) NULL)
         continue;
       count++;
-      EXTEND(sp,280*count);
-      for (i=0; i < 4; i++)
+      for (j=0; j < 4; j++)
       {
-        ChannelFeatures(RedChannel,i);
-        ChannelFeatures(GreenChannel,i);
-        ChannelFeatures(BlueChannel,i);
-        if (image->colorspace == CMYKColorspace)
-          ChannelFeatures(BlackChannel,i);
-        if (image->alpha_trait != UndefinedPixelTrait)
-          ChannelFeatures(AlphaChannel,i);
+        for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+        {
+          PixelChannel channel=GetPixelChannelChannel(image,i);
+          PixelTrait traits=GetPixelChannelTraits(image,channel);
+          if (traits == UndefinedPixelTrait)
+            continue;
+          EXTEND(sp,14*(i+1)*count);
+          ChannelFeatures(channel,j);
+        }
       }
       channel_features=(ChannelFeatures *)
         RelinquishMagickMemory(channel_features);
@@ -4704,7 +4769,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.blue_primary.x,
                 image->chromaticity.blue_primary.y);
               s=newSVpv(color,0);
@@ -4897,7 +4962,7 @@ Get(ref,...)
 
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(geometry,MagickPathExtent,"%.15gx%.15g",
+              (void) FormatLocaleString(geometry,MagickPathExtent,"%.20gx%.20g",
                 image->resolution.x,image->resolution.y);
               s=newSVpv(geometry,0);
               PUSHs(s ? sv_2mortal(s) : &sv_undef);
@@ -5089,7 +5154,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.green_primary.x,
                 image->chromaticity.green_primary.y);
               s=newSVpv(color,0);
@@ -5523,7 +5588,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.red_primary.x,
                 image->chromaticity.red_primary.y);
               s=newSVpv(color,0);
@@ -5720,7 +5785,7 @@ Get(ref,...)
             {
               if (image == (Image *) NULL)
                 break;
-              (void) FormatLocaleString(color,MagickPathExtent,"%.15g,%.15g",
+              (void) FormatLocaleString(color,MagickPathExtent,"%.20g,%.20g",
                 image->chromaticity.white_point.x,
                 image->chromaticity.white_point.y);
               s=newSVpv(color,0);
@@ -7564,6 +7629,8 @@ Mogrify(ref,...)
     ColorImage         = 288
     WaveletDenoise     = 289
     WaveletDenoiseImage= 290
+    Colorspace         = 291
+    ColorspaceImage    = 292
     MogrifyRegion      = 666
   PPCODE:
   {
@@ -9079,7 +9146,7 @@ Mogrify(ref,...)
           if (attribute_flag[0] == 0)
             {
               (void) FormatLocaleString(message,MagickPathExtent,
-                "%.15g,%.15g,%.15g",(double) argument_list[2].real_reference,
+                "%.20g,%.20g,%.20g",(double) argument_list[2].real_reference,
                 (double) argument_list[3].real_reference,
                 (double) argument_list[4].real_reference);
               argument_list[0].string_reference=message;
@@ -9187,7 +9254,7 @@ Mogrify(ref,...)
               geometry_info.rho=argument_list[6].real_reference;
               SetImageArtifact(image,"modulate:colorspace","HWB");
             }
-          (void) FormatLocaleString(modulate,MagickPathExtent,"%.15g,%.15g,%.15g",
+          (void) FormatLocaleString(modulate,MagickPathExtent,"%.20g,%.20g,%.20g",
             geometry_info.rho,geometry_info.sigma,geometry_info.xi);
           (void) ModulateImage(image,modulate,exception);
           break;
@@ -11330,6 +11397,17 @@ Mogrify(ref,...)
             (void) SetImageChannelMask(image,channel_mask);
           break;
         }
+        case 146:  /* Colorspace */
+        {
+          ColorspaceType
+            colorspace;
+
+          colorspace=sRGBColorspace;
+          if (attribute_flag[0] != 0)
+            colorspace=(ColorspaceType) argument_list[0].integer_reference;
+          (void) TransformImageColorspace(image,colorspace,exception);
+          break;
+        }
       }
       if (next != (Image *) NULL)
         (void) CatchImageException(next);
@@ -12968,7 +13046,7 @@ QueryFontMetrics(ref,...)
       {
         draw_info->geometry=AcquireString((char *) NULL);
         (void) FormatLocaleString(draw_info->geometry,MagickPathExtent,
-          "%.15g,%.15g",x,y);
+          "%.20g,%.20g",x,y);
       }
     status=GetTypeMetrics(image,draw_info,&metrics,exception);
     (void) CatchImageException(image);
@@ -13341,7 +13419,7 @@ QueryMultilineFontMetrics(ref,...)
       {
         draw_info->geometry=AcquireString((char *) NULL);
         (void) FormatLocaleString(draw_info->geometry,MagickPathExtent,
-          "%.15g,%.15g",x,y);
+          "%.20g,%.20g",x,y);
       }
     status=GetMultilineTypeMetrics(image,draw_info,&metrics,exception);
     (void) CatchException(exception);
@@ -14287,25 +14365,25 @@ Statistics(ref,...)
   (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     (double) channel_statistics[channel].depth); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].minima/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].minima/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].maxima/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].maxima/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].mean/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].mean/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
-    channel_statistics[channel].standard_deviation/scale); \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
+    channel_statistics[channel].standard_deviation/QuantumRange); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].kurtosis); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].skewness); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
-  (void) FormatLocaleString(message,MagickPathExtent,"%.15g", \
+  (void) FormatLocaleString(message,MagickPathExtent,"%.20g", \
     channel_statistics[channel].entropy); \
   PUSHs(sv_2mortal(newSVpv(message,0))); \
 }
@@ -14318,9 +14396,6 @@ Statistics(ref,...)
 
     ChannelStatistics
       *channel_statistics;
-
-    double
-      scale;
 
     ExceptionInfo
       *exception;
@@ -14362,19 +14437,24 @@ Statistics(ref,...)
     count=0;
     for ( ; image; image=image->next)
     {
+      register size_t
+        i;
+
       channel_statistics=GetImageStatistics(image,exception);
       if (channel_statistics == (ChannelStatistics *) NULL)
         continue;
       count++;
-      EXTEND(sp,35*count);
-      scale=(double) QuantumRange;
-      ChannelStatistics(RedChannel);
-      ChannelStatistics(GreenChannel);
-      ChannelStatistics(BlueChannel);
-      if (image->colorspace == CMYKColorspace)
-        ChannelStatistics(BlackChannel);
-      if (image->alpha_trait != UndefinedPixelTrait)
-        ChannelStatistics(AlphaChannel);
+      for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+      {
+        PixelChannel channel=GetPixelChannelChannel(image,i);
+        PixelTrait traits=GetPixelChannelTraits(image,channel);
+        if (traits == UndefinedPixelTrait)
+          continue;
+        EXTEND(sp,8*(i+1)*count);
+        ChannelStatistics(channel);
+      }
+      EXTEND(sp,8*(i+1)*count);
+      ChannelStatistics(CompositePixelChannel);
       channel_statistics=(ChannelStatistics *)
         RelinquishMagickMemory(channel_statistics);
     }

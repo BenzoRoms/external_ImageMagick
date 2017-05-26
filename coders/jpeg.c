@@ -23,7 +23,7 @@
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -359,10 +359,9 @@ static MagickBooleanType JPEGWarningHandler(j_common_ptr jpeg_info,int level)
         Process warning message.
       */
       (jpeg_info->err->format_message)(jpeg_info,message);
-      if (jpeg_info->err->num_warnings++ > JPEGExcessiveWarnings)
-        JPEGErrorHandler(jpeg_info);
-      ThrowBinaryException(CorruptImageWarning,(char *) message,
-        image->filename);
+      if (jpeg_info->err->num_warnings++ < JPEGExcessiveWarnings)
+        ThrowBinaryException(CorruptImageWarning,(char *) message,
+          image->filename);
     }
   else
     if ((image->debug != MagickFalse) &&
@@ -1908,7 +1907,8 @@ static void TerminateDestination(j_compress_ptr cinfo)
     }
 }
 
-static void WriteProfile(j_compress_ptr jpeg_info,Image *image)
+static void WriteProfile(j_compress_ptr jpeg_info,Image *image,
+  ExceptionInfo *exception)
 {
   const char
     *name;
@@ -1939,10 +1939,16 @@ static void WriteProfile(j_compress_ptr jpeg_info,Image *image)
   {
     profile=GetImageProfile(image,name);
     if (LocaleCompare(name,"EXIF") == 0)
-      for (i=0; i < (ssize_t) GetStringInfoLength(profile); i+=65533L)
       {
-        length=MagickMin(GetStringInfoLength(profile)-i,65533L);
-        jpeg_write_marker(jpeg_info,XML_MARKER,GetStringInfoDatum(profile)+i,
+        length=GetStringInfoLength(profile);
+        if (length > 65533L)
+          {
+            (void) ThrowMagickException(exception,GetMagickModule(),
+              CoderWarning,"ExifProfileSizeExceedsLimit","`%s'",
+              image->filename);
+            length=65533L;
+          }
+        jpeg_write_marker(jpeg_info,XML_MARKER,GetStringInfoDatum(profile),
           (unsigned int) length);
       }
     if (LocaleCompare(name,"ICC") == 0)
@@ -2336,7 +2342,7 @@ static MagickBooleanType WriteJPEGImage(const ImageInfo *image_info,
 #else
       if (image->quality < 100)
         (void) ThrowMagickException(exception,GetMagickModule(),CoderWarning,
-          "LosslessToLossyJPEGConversion",image->filename);
+          "LosslessToLossyJPEGConversion","`%s'",image->filename);
       else
         {
           int
@@ -2670,7 +2676,7 @@ static MagickBooleanType WriteJPEGImage(const ImageInfo *image_info,
       jpeg_write_marker(&jpeg_info,JPEG_COM,(unsigned char *) value+i,
         (unsigned int) MagickMin((size_t) strlen(value+i),65533L));
   if (image->profiles != (void *) NULL)
-    WriteProfile(&jpeg_info,image);
+    WriteProfile(&jpeg_info,image,exception);
   /*
     Convert MIFF to JPEG raster pixels.
   */

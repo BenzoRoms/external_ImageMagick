@@ -1,11 +1,11 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
   
   You may not use this file except in compliance with the License.
   obtain a copy of the License at
   
-    http://www.imagemagick.org/script/license.php
+    https://www.imagemagick.org/script/license.php
   
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,14 +43,15 @@ typedef enum
   NoPolicyRights = 0x00,
   ReadPolicyRights = 0x01,
   WritePolicyRights = 0x02,
-  ExecutePolicyRights = 0x04
+  ExecutePolicyRights = 0x04,
+  AllPolicyRights = 0xff
 } PolicyRights;
 
 typedef struct _PolicyInfo
   PolicyInfo;
 
 extern MagickExport char
-  *GetPolicyValue(const char *name),
+  *GetPolicyValue(const char *),
   **GetPolicyList(const char *,size_t *,ExceptionInfo *);
 
 extern MagickExport const PolicyInfo

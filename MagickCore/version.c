@@ -17,13 +17,13 @@
 %                               September 2002                                %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -292,9 +292,13 @@ MagickExport char *GetMagickHomeURL(void)
     (void) FormatLocaleString(path,MagickPathExtent,"%s%s%s",element,
       DirectorySeparator,MagickURLFilename);
     if (IsPathAccessible(path) != MagickFalse)
-      return(ConstantString(path));
+      {
+        paths=DestroyLinkedList(paths,RelinquishMagickMemory);
+        return(ConstantString(path));
+      }
     element=(const char *) GetNextValueInLinkedList(paths);
   }
+  paths=DestroyLinkedList(paths,RelinquishMagickMemory);
   return(ConstantString(MagickHomeURL));
 }
 
@@ -587,7 +591,7 @@ MagickExport const char *GetMagickVersion(size_t *version)
 MagickExport void ListMagickVersion(FILE *file)
 {
   (void) FormatLocaleFile(file,"Version: %s\n",
-    GetMagickVersion((size_t *) NULL));
+    GetMagickVersion((size_t *) NULL));;
   (void) FormatLocaleFile(file,"Copyright: %s\n",GetMagickCopyright());
   (void) FormatLocaleFile(file,"License: %s\n",GetMagickLicense());
 #if defined(MAGICKCORE_WINDOWS_SUPPORT) && defined(_MSC_FULL_VER)

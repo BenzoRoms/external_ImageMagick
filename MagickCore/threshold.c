@@ -17,13 +17,13 @@
 %                                 October 1996                                %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -274,7 +274,7 @@ MagickExport Image *AdaptiveThresholdImage(const Image *image,
           (threshold_traits == UndefinedPixelTrait))
         continue;
       if (((threshold_traits & CopyPixelTrait) != 0) ||
-          (GetPixelReadMask(image,p) == 0))
+          (GetPixelWriteMask(image,p) == 0))
         {
           SetPixelChannel(threshold_image,channel,p[center+i],q);
           continue;
@@ -309,7 +309,7 @@ MagickExport Image *AdaptiveThresholdImage(const Image *image,
             (threshold_traits == UndefinedPixelTrait))
           continue;
         if (((threshold_traits & CopyPixelTrait) != 0) ||
-            (GetPixelReadMask(image,p) == 0))
+            (GetPixelWriteMask(image,p) == 0))
           {
             SetPixelChannel(threshold_image,channel,p[center+i],q);
             continue;
@@ -455,7 +455,7 @@ MagickExport MagickBooleanType BilevelImage(Image *image,const double threshold,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -620,7 +620,7 @@ MagickExport MagickBooleanType BlackThresholdImage(Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -756,7 +756,7 @@ MagickExport MagickBooleanType ClampImage(Image *image,ExceptionInfo *exception)
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -1348,12 +1348,17 @@ MagickExport MagickBooleanType OrderedDitherImage(Image *image,
     levels[i]=2.0;
   p=strchr((char *) threshold_map,',');
   if ((p != (char *) NULL) && (isdigit((int) ((unsigned char) *(++p))) != 0))
-    for (i=0; (*p != '\0') && (i < MaxPixelChannels); i++)
     {
       GetNextToken(p,&p,MagickPathExtent,token);
-      if (*token == ',')
+      for (i=0; (i < MaxPixelChannels); i++)
+        levels[i]=StringToDouble(token,(char **) NULL);
+      for (i=0; (*p != '\0') && (i < MaxPixelChannels); i++)
+      {
         GetNextToken(p,&p,MagickPathExtent,token);
-      levels[i]=StringToDouble(token,(char **) NULL);
+        if (*token == ',')
+          GetNextToken(p,&p,MagickPathExtent,token);
+        levels[i]=StringToDouble(token,(char **) NULL);
+      }
     }
   for (i=0; i < MaxPixelChannels; i++)
     if (fabs(levels[i]) >= 1)
@@ -1392,7 +1397,7 @@ MagickExport MagickBooleanType OrderedDitherImage(Image *image,
         n;
 
       n=0;
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -1407,8 +1412,11 @@ MagickExport MagickBooleanType OrderedDitherImage(Image *image,
         PixelTrait traits=GetPixelChannelTraits(image,channel);
         if ((traits & UpdatePixelTrait) == 0)
           continue;
-        if (fabs(levels[n++]) < MagickEpsilon)
-          continue;
+        if (fabs(levels[n]) < MagickEpsilon)
+          {
+            n++;
+            continue;
+          }
         threshold=(ssize_t) (QuantumScale*q[i]*(levels[n]*(map->divisor-1)+1));
         level=threshold/(map->divisor-1);
         threshold-=level*(map->divisor-1);
@@ -1556,7 +1564,7 @@ MagickExport MagickBooleanType PerceptibleImage(Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -1693,7 +1701,7 @@ MagickExport MagickBooleanType RandomThresholdImage(Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;
@@ -1867,7 +1875,7 @@ MagickExport MagickBooleanType WhiteThresholdImage(Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           q+=GetPixelChannels(image);
           continue;

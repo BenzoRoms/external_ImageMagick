@@ -17,13 +17,13 @@
 %                                 July 1999                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -240,6 +240,16 @@ ModuleExport size_t RegisterMPEGImage(void)
   MagickInfo
     *entry;
 
+  entry=AcquireMagickInfo("MPEG","3GP","Media Container");
+  entry->decoder=(DecodeImageHandler *) ReadMPEGImage;
+  entry->flags^=CoderBlobSupportFlag;
+  entry->flags|=CoderSeekableStreamFlag;
+  (void) RegisterMagickInfo(entry);
+  entry=AcquireMagickInfo("MPEG","3G2","Media Container");
+  entry->decoder=(DecodeImageHandler *) ReadMPEGImage;
+  entry->flags^=CoderBlobSupportFlag;
+  entry->flags|=CoderSeekableStreamFlag;
+  (void) RegisterMagickInfo(entry);
   entry=AcquireMagickInfo("MPEG","AVI","Microsoft Audio/Visual Interleaved");
   entry->decoder=(DecodeImageHandler *) ReadMPEGImage;
   entry->magick=(IsImageFormatHandler *) IsAVI;
@@ -326,6 +336,8 @@ ModuleExport void UnregisterMPEGImage(void)
   (void) UnregisterMagickInfo("MPEG");
   (void) UnregisterMagickInfo("MKV");
   (void) UnregisterMagickInfo("AVI");
+  (void) UnregisterMagickInfo("3G2");
+  (void) UnregisterMagickInfo("3GP");
 }
 
 /*

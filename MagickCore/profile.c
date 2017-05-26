@@ -17,13 +17,13 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -1667,8 +1667,9 @@ static MagickBooleanType SetImageProfileInternal(Image *image,const char *name,
     {
       if (LocaleCompare(name,"8bim") == 0)
         GetProfilesFromResourceBlock(image,profile,exception);
-      else if (recursive == MagickFalse)
-        WriteTo8BimProfile(image,name,profile);
+      else
+        if (recursive == MagickFalse)
+          WriteTo8BimProfile(image,name,profile);
     }
   /*
     Inject profile into image properties.
@@ -2032,7 +2033,7 @@ MagickBooleanType SyncExifProfile(Image *image,StringInfo *profile)
         break;  /* corrupt EXIF */
       tag_value=(ssize_t) ReadProfileShort(endian,q);
       format=(ssize_t) ReadProfileShort(endian,q+2);
-      if ((format-1) >= EXIF_NUM_FORMATS)
+      if ((format < 0) || ((format-1) >= EXIF_NUM_FORMATS))
         break;
       components=(ssize_t) ReadProfileLong(endian,q+4);
       if (components < 0)
@@ -2048,7 +2049,7 @@ MagickBooleanType SyncExifProfile(Image *image,StringInfo *profile)
             The directory entry contains an offset.
           */
           offset=(ssize_t)  ReadProfileLong(endian,q+8);
-          if ((size_t) (offset+number_bytes) > length)
+          if ((offset < 0) || ((size_t) (offset+number_bytes) > length))
             continue;
           if (~length < number_bytes)
             continue;  /* prevent overflow */

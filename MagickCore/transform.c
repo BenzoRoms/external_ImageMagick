@@ -17,13 +17,13 @@
 %                                 July 1992                                   %
 %                                                                             %
 %                                                                             %
-%  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization      %
+%  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization      %
 %  dedicated to making software imaging solutions freely available.           %
 %                                                                             %
 %  You may not use this file except in compliance with the License.  You may  %
 %  obtain a copy of the License at                                            %
 %                                                                             %
-%    http://www.imagemagick.org/script/license.php                            %
+%    https://www.imagemagick.org/script/license.php                           %
 %                                                                             %
 %  Unless required by applicable law or agreed to in writing, software        %
 %  distributed under the License is distributed on an "AS IS" BASIS,          %
@@ -697,7 +697,7 @@ MagickExport Image *CropImage(const Image *image,const RectangleInfo *geometry,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(crop_image,q);
           p+=GetPixelChannels(image);
@@ -1050,7 +1050,7 @@ MagickExport Image *ExcerptImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(excerpt_image,q);
           p+=GetPixelChannels(image);
@@ -1248,7 +1248,7 @@ MagickExport Image *FlipImage(const Image *image,ExceptionInfo *exception)
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(flip_image,q);
           p+=GetPixelChannels(image);
@@ -1391,7 +1391,7 @@ MagickExport Image *FlopImage(const Image *image,ExceptionInfo *exception)
         i;
 
       q-=GetPixelChannels(flop_image);
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           p+=GetPixelChannels(image);
           continue;
@@ -1517,7 +1517,7 @@ static MagickBooleanType CopyImageRegion(Image *destination,const Image *source,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(source,p) == 0)
+      if (GetPixelWriteMask(source,p) == 0)
         {
           SetPixelBackgoundColor(destination,q);
           p+=GetPixelChannels(source);
@@ -1845,7 +1845,7 @@ MagickExport Image *SpliceImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(splice_image,q);
           p+=GetPixelChannels(image);
@@ -1876,7 +1876,7 @@ MagickExport Image *SpliceImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           SetPixelBackgoundColor(splice_image,q);
           p+=GetPixelChannels(image);
@@ -1950,7 +1950,7 @@ MagickExport Image *SpliceImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           SetPixelBackgoundColor(splice_image,q);
           p+=GetPixelChannels(image);
@@ -1981,7 +1981,7 @@ MagickExport Image *SpliceImage(const Image *image,
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           SetPixelBackgoundColor(splice_image,q);
           p+=GetPixelChannels(image);
@@ -2224,7 +2224,7 @@ MagickExport Image *TransposeImage(const Image *image,ExceptionInfo *exception)
       register ssize_t
         i;
 
-      if (GetPixelReadMask(image,q) == 0)
+      if (GetPixelWriteMask(image,q) == 0)
         {
           SetPixelBackgoundColor(transpose_image,q);
           p+=GetPixelChannels(image);
@@ -2373,7 +2373,7 @@ MagickExport Image *TransverseImage(const Image *image,ExceptionInfo *exception)
         i;
 
       q-=GetPixelChannels(transverse_image);
-      if (GetPixelReadMask(image,p) == 0)
+      if (GetPixelWriteMask(image,p) == 0)
         {
           p+=GetPixelChannels(image);
           continue;

@@ -1,11 +1,11 @@
 /*
-  Copyright 1999-2016 ImageMagick Studio LLC, a non-profit organization
+  Copyright 1999-2017 ImageMagick Studio LLC, a non-profit organization
   dedicated to making software imaging solutions freely available.
   
   You may not use this file except in compliance with the License.
   obtain a copy of the License at
   
-    http://www.imagemagick.org/script/license.php
+    https://www.imagemagick.org/script/license.php
   
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,10 +46,10 @@ typedef float float_t;
 #if (MAGICKCORE_QUANTUM_DEPTH == 8)
 #define MaxColormapSize  256UL
 #define MaxMap  255UL
-typedef float_t MagickRealType;
+typedef double_t MagickRealType;
 
 #if defined(MAGICKCORE_HDRI_SUPPORT)
-typedef float Quantum;
+typedef float_t Quantum;
 #define QuantumRange  255.0
 #define QuantumFormat  "%g"
 #else
@@ -60,10 +60,10 @@ typedef unsigned char Quantum;
 #elif (MAGICKCORE_QUANTUM_DEPTH == 16)
 #define MaxColormapSize  65536UL
 #define MaxMap  65535UL
-typedef float_t MagickRealType;
+typedef double_t MagickRealType;
 
 #if defined(MAGICKCORE_HDRI_SUPPORT)
-typedef float Quantum;
+typedef float_t Quantum;
 #define QuantumRange  65535.0f
 #define QuantumFormat  "%g"
 #else
@@ -74,7 +74,7 @@ typedef unsigned short Quantum;
 #elif (MAGICKCORE_QUANTUM_DEPTH == 32)
 #define MaxColormapSize  65536UL
 #define MaxMap  65535UL
-typedef float_t MagickRealType;
+typedef double_t MagickRealType;
 
 #if defined(MAGICKCORE_HDRI_SUPPORT)
 typedef double Quantum;
@@ -86,7 +86,7 @@ typedef unsigned int Quantum;
 #define QuantumFormat  "%u"
 #endif
 #elif (MAGICKCORE_QUANTUM_DEPTH == 64)
-#define MAGICKCORE_HDRI_SUPPORT
+#define MAGICKCORE_HDRI_SUPPORT  1
 #define MaxColormapSize  65536UL
 #define MaxMap  65535UL
 
@@ -166,6 +166,9 @@ typedef enum
 #  define IsNaN(a) _isnan(a)
 #else
 #  define IsNaN(a) (a != a)
+#endif
+#if !defined(INFINITY)
+#  define INFINITY (log(0))
 #endif
 
 typedef struct _BlobInfo BlobInfo;

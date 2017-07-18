@@ -75,6 +75,7 @@
 #include "MagickCore/string_.h"
 #include "MagickCore/token.h"
 #include "MagickCore/token-private.h"
+#include "MagickCore/transform.h"
 #include "MagickCore/transform-private.h"
 #include "MagickCore/type.h"
 #include "MagickCore/utility.h"
@@ -1497,7 +1498,9 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
       encoding != (char *) NULL ? encoding : "none",
       draw_info->encoding != (char *) NULL ? draw_info->encoding : "none",
       draw_info->pointsize);
-  flags=FT_LOAD_NO_BITMAP;
+  flags=FT_LOAD_DEFAULT;
+  if (draw_info->render == MagickFalse)
+    flags=FT_LOAD_NO_BITMAP;
   if (draw_info->text_antialias == MagickFalse)
     flags|=FT_LOAD_TARGET_MONO;
   else
@@ -1630,10 +1633,11 @@ static MagickBooleanType RenderFreetype(Image *image,const DrawInfo *draw_info,
         /*
           Rasterize the glyph.
         */
-        transparent_fill=(draw_info->fill.alpha == TransparentAlpha) &&
+        transparent_fill=((draw_info->fill.alpha == TransparentAlpha) &&
           (draw_info->fill_pattern == (Image *) NULL) &&
           (draw_info->stroke.alpha == TransparentAlpha) &&
-          (draw_info->stroke_pattern == (Image *) NULL);
+          (draw_info->stroke_pattern == (Image *) NULL)) ? MagickTrue :
+          MagickFalse;
         image_view=AcquireAuthenticCacheView(image,exception);
         r=bitmap->bitmap.buffer;
         for (y=0; y < (ssize_t) bitmap->bitmap.rows; y++)

@@ -564,6 +564,7 @@ static struct
       {"threshold", RealReference}, {"softness", RealReference},
       {"channel", MagickChannelOptions} } },
     { "Colorspace", { {"colorspace", MagickColorspaceOptions} } },
+    { "AutoThreshold", { {"method", MagickAutoThresholdOptions} } },
   };
 
 static SplayTreeInfo
@@ -5069,8 +5070,7 @@ Get(ref,...)
             }
           if (LocaleCompare(attribute,"filename") == 0)
             {
-              if (info && info->image_info->filename &&
-                  *info->image_info->filename)
+              if (info && *info->image_info->filename)
                 s=newSVpv(info->image_info->filename,0);
               if (image != (Image *) NULL)
                 s=newSVpv(image->filename,0);
@@ -7621,8 +7621,8 @@ Mogrify(ref,...)
     MeanShiftImage     = 280
     Kuwahara           = 281
     KuwaharaImage      = 282
-    ConnectedComponent = 283
-    ConnectedComponentImage = 284
+    ConnectedComponents = 283
+    ConnectedComponentsImage = 284
     CopyPixels         = 285
     CopyImagePixels    = 286
     Color              = 287
@@ -7631,6 +7631,8 @@ Mogrify(ref,...)
     WaveletDenoiseImage= 290
     Colorspace         = 291
     ColorspaceImage    = 292
+    AutoThreshold      = 293
+    AutoThresholdImage = 294
     MogrifyRegion      = 666
   PPCODE:
   {
@@ -8218,8 +8220,15 @@ Mogrify(ref,...)
         case 22:  /* Roll */
         {
           if (attribute_flag[0] != 0)
-            flags=ParsePageGeometry(image,argument_list[0].string_reference,
-              &geometry,exception);
+            {
+              flags=ParsePageGeometry(image,argument_list[0].string_reference,
+                &geometry,exception);
+              if ((flags & PercentValue) != 0)
+                {
+                  geometry.x*=(double) image->columns/100.0;
+                  geometry.y*=(double) image->rows/100.0;
+                }
+            }
           if (attribute_flag[1] != 0)
             geometry.x=argument_list[1].integer_reference;
           if (attribute_flag[2] != 0)
@@ -9653,7 +9662,7 @@ Mogrify(ref,...)
           if (attribute_flag[1] != 0)
             channel=(ChannelType) argument_list[1].integer_reference;
           if (attribute_flag[2] != 0)
-            SetImageArtifact(image,"filter:blur",
+            SetImageArtifact(image,"convolve:bias",
               argument_list[2].string_reference);
           if (attribute_flag[3] != 0)
             {
@@ -11304,7 +11313,7 @@ Mogrify(ref,...)
             (void) SetImageChannelMask(image,channel_mask);
           break;
         }
-        case 142:  /* ConnectedComponent */
+        case 142:  /* ConnectedComponents */
         {
           size_t
             connectivity;
@@ -11406,6 +11415,17 @@ Mogrify(ref,...)
           if (attribute_flag[0] != 0)
             colorspace=(ColorspaceType) argument_list[0].integer_reference;
           (void) TransformImageColorspace(image,colorspace,exception);
+          break;
+        }
+        case 147:  /* AutoThreshold */
+        {
+          AutoThresholdMethod
+            method;
+
+          method=UndefinedThresholdMethod;
+          if (attribute_flag[0] != 0)
+            method=(AutoThresholdMethod) argument_list[0].integer_reference;
+          (void) AutoThresholdImage(image,method,exception);
           break;
         }
       }

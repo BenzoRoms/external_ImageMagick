@@ -1,3 +1,56 @@
+2017-07-15  7.0.6-1 Cristy  <quetzlzacatenango@image...>
+  * Release ImageMagick version 7.0.6-1, GIT revision 20447:c2a315e10:20170715.
+
+2017-07-13  7.0.6-1 Glenn Randers-Pehrson <glennrp@image...>
+  * Implemented PNG eXIf chunk support.
+
+2017-07-08  7.0.6-1 Cristy  <quetzlzacatenango@image...>
+  * Support new -auto-threshold option.  OTSU and Triangle methods are
+    currently supported.  Look for the Kapur method in the next release.
+  * Fixed numerous memory leaks (reference
+    https://github.com/ImageMagick/ImageMagick/issues).
+  * Don't use variable float_t / double_t, bump SO (reference
+    https://github.com/ImageMagick/ImageMagick/issues/510).
+  * Support DNG images with libraw delegate library.
+
+2017-07-02  7.0.6-1 Glenn Randers-Pehrson <glennrp@image...>
+  * Reject PNG file that is too small (under 60 bytes) to contain
+    a valid image.
+  * Reject JPEG file that is too small (under 107 bytes) to contain
+    a valid image.
+  * Reject JNG file that is too small (under 147 bytes) to contain
+    a valid image.
+
+2017-06-22  7.0.6-1 Glenn Randers-Pehrson <glennrp@image...>
+  * Stop a memory leak in read_user_chunk_callback() (reference
+    https://github.com/ImageMagick/ImageMagick/issues/517,
+    CVE 2017-11310).
+
+2017-06-10  7.0.6-0 Cristy  <quetzlzacatenango@image...>
+  * Release ImageMagick version 7.0.6-0, GIT revision 20194:b0c0d00:20170611.
+
+2017-06-10  7.0.6-0 Glenn Randers-Pehrson <glennrp@image...>
+  * coders/png.c: Accept exIf chunks whose data segment
+    erroneously begins with "Exif\0\0".
+
+2017-06-10  7.0.6-0 Cristy  <quetzlzacatenango@image...>
+  * Introduce SetMagickSecurityPolicy() (MagickCore) and
+    MagickSetSecurityPolicy() (MagickWand) to set the ImageMagick security
+    policy (reference https://github.com/ImageMagick/ImageMagick/issues/407).
+
+2017-06-02  7.0.5-10 Cristy  <quetzlzacatenango@image...>
+  * Release ImageMagick version 7.0.5-10, GIT revision 20155:38ebc02:20170602.
+
+2017-06-01  7.0.5-10 Glenn Randers-Pehrson <glennrp@image...>
+  * Removed experimental PNG zxIF chunk support; the proposal is dead.
+
+2017-06-01  7.0.5-10 Cristy  <quetzlzacatenango@image...>
+  * Fix choppy bitmap font rendering (reference
+    https://www.imagemagick.org/discourse-server/viewtopic.php?f=3&t=32071).
+  * The +opaque option is not longer a noop (reference
+    https://www.imagemagick.org/discourse-server/viewtopic.php?f=3&t=32081).
+  * Add support  for 'hex:' property.
+
 2017-05-28  7.0.5-9 Cristy  <quetzlzacatenango@image...>
   * Release ImageMagick version 7.0.5-9, GIT revision 20113:8b67333:20170528.
 

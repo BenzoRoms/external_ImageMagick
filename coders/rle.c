@@ -266,6 +266,14 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
       (void) ReadBlobByte(image);
     if (EOFBlob(image) != MagickFalse)
       ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
+    if (image->alpha_trait != UndefinedPixelTrait)
+      number_planes++;
+    number_pixels=(MagickSizeType) image->columns*image->rows;
+    if ((GetBlobSize(image) == 0) || ((((MagickSizeType) number_pixels*
+         number_planes*bits_per_pixel/8)/GetBlobSize(image)) > 254.0))
+      ThrowRLEException(CorruptImageError,"InsufficientImageDataInFile")
+    if (((MagickSizeType) number_colormaps*map_length) > GetBlobSize(image))
+      ThrowRLEException(CorruptImageError,"InsufficientImageDataInFile")
     if (number_colormaps != 0)
       {
         /*
@@ -278,12 +286,12 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         p=colormap;
         for (i=0; i < (ssize_t) number_colormaps; i++)
           for (x=0; x < (ssize_t) map_length; x++)
-	  {
+          {
             *p++=(unsigned char) ScaleQuantumToChar(ScaleShortToQuantum(
               ReadBlobLSBShort(image)));
             if (EOFBlob(image) != MagickFalse)
               ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
-	  }
+          }
       }
     if ((flags & 0x08) != 0)
       {
@@ -321,9 +329,6 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
     /*
       Allocate RLE pixels.
     */
-    if (image->alpha_trait != UndefinedPixelTrait)
-      number_planes++;
-    number_pixels=(MagickSizeType) image->columns*image->rows;
     number_planes_filled=(number_planes % 2 == 0) ? number_planes :
       number_planes+1;
     if ((number_pixels*number_planes_filled) != (size_t) (number_pixels*
@@ -375,14 +380,14 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         case SkipLinesOp:
         {
           operand=ReadBlobByte(image);
-          if (opcode == EOF)
+          if (operand == EOF)
             ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
           if (opcode & 0x40)
             {
               operand=ReadBlobLSBSignedShort(image);
-              if (opcode == EOF)
+              if (operand == EOF)
                 ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
-	    }
+            }
           x=0;
           y+=operand;
           break;
@@ -390,7 +395,7 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         case SetColorOp:
         {
           operand=ReadBlobByte(image);
-          if (opcode == EOF)
+          if (operand == EOF)
             ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
           plane=(unsigned char) operand;
           if (plane == 255)
@@ -401,12 +406,12 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         case SkipPixelsOp:
         {
           operand=ReadBlobByte(image);
-          if (opcode == EOF)
+          if (operand == EOF)
             ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
           if (opcode & 0x40)
             {
               operand=ReadBlobLSBSignedShort(image);
-              if (opcode == EOF)
+              if (operand == EOF)
                 ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
             }
           x+=operand;
@@ -415,19 +420,19 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         case ByteDataOp:
         {
           operand=ReadBlobByte(image);
-          if (opcode == EOF)
+          if (operand == EOF)
             ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
           if (opcode & 0x40)
             {
               operand=ReadBlobLSBSignedShort(image);
-              if (opcode == EOF)
+              if (operand == EOF)
                 ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
             }
           offset=(ssize_t) (((image->rows-y-1)*image->columns*number_planes)+x*
             number_planes+plane);
           operand++;
           if ((offset < 0) ||
-              ((offset+operand*number_planes) > (ssize_t) pixel_info_length))
+              ((size_t) (offset+operand*number_planes) > pixel_info_length))
             {
               if (number_colormaps != 0)
                 colormap=(unsigned char *) RelinquishMagickMemory(colormap);
@@ -451,12 +456,12 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
         case RunDataOp:
         {
           operand=ReadBlobByte(image);
-          if (opcode == EOF)
+          if (operand == EOF)
             ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
           if (opcode & 0x40)
             {
               operand=ReadBlobLSBSignedShort(image);
-              if (opcode == EOF)
+              if (operand == EOF)
                 ThrowRLEException(CorruptImageError,"UnexpectedEndOfFile");
             }
           pixel=(unsigned char) ReadBlobByte(image);
@@ -465,7 +470,7 @@ static Image *ReadRLEImage(const ImageInfo *image_info,ExceptionInfo *exception)
             number_planes+plane);
           operand++;
           if ((offset < 0) ||
-              ((offset+operand*number_planes) > (ssize_t) pixel_info_length))
+              ((size_t) (offset+operand*number_planes) > pixel_info_length))
             {
               if (number_colormaps != 0)
                 colormap=(unsigned char *) RelinquishMagickMemory(colormap);
@@ -734,6 +739,7 @@ ModuleExport size_t RegisterRLEImage(void)
   entry=AcquireMagickInfo("RLE","RLE","Utah Run length encoded image");
   entry->decoder=(DecodeImageHandler *) ReadRLEImage;
   entry->magick=(IsImageFormatHandler *) IsRLE;
+  entry->flags|=CoderDecoderSeekableStreamFlag;
   entry->flags^=CoderAdjoinFlag;
   (void) RegisterMagickInfo(entry);
   return(MagickImageCoderSignature);

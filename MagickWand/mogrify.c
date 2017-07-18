@@ -899,6 +899,17 @@ WandExport MagickBooleanType MogrifyImage(ImageInfo *image_info,const int argc,
               exception);
             break;
           }
+        if (LocaleCompare("auto-threshold",option+1) == 0)
+          {
+            AutoThresholdMethod
+              method;
+
+            (void) SyncImageSettings(mogrify_info,*image,exception);
+            method=(AutoThresholdMethod) ParseCommandOption(
+              MagickAutoThresholdOptions,MagickFalse,argv[i+1]);
+            (void) AutoThresholdImage(*image,method,exception);
+            break;
+          }
         break;
       }
       case 'b':
@@ -1073,7 +1084,7 @@ WandExport MagickBooleanType MogrifyImage(ImageInfo *image_info,const int argc,
             (void) SyncImageSettings(mogrify_info,*image,exception);
             if (*option == '+')
               {
-                (void) SetImageMask(*image,ReadPixelMask,(Image *) NULL,
+                (void) SetImageMask(*image,WritePixelMask,(Image *) NULL,
                   exception);
                 break;
               }
@@ -2600,12 +2611,13 @@ WandExport MagickBooleanType MogrifyImage(ImageInfo *image_info,const int argc,
             (void) SyncImageSettings(mogrify_info,*image,exception);
             if (*option == '+')
               {
-                (void) SetImageRegionMask(*image,ReadPixelMask,
+                (void) SetImageRegionMask(*image,WritePixelMask,
                   (const RectangleInfo *) NULL,exception);
                 break;
               }
             (void) ParseGravityGeometry(*image,argv[i+1],&geometry,exception);
-            (void) SetImageRegionMask(*image,ReadPixelMask,&geometry,exception);
+            (void) SetImageRegionMask(*image,WritePixelMask,&geometry,
+              exception);
             break;
           }
         if (LocaleCompare("render",option+1) == 0)
@@ -2672,7 +2684,12 @@ WandExport MagickBooleanType MogrifyImage(ImageInfo *image_info,const int argc,
               Roll image.
             */
             (void) SyncImageSettings(mogrify_info,*image,exception);
-            (void) ParsePageGeometry(*image,argv[i+1],&geometry,exception);
+            flags=ParsePageGeometry(*image,argv[i+1],&geometry,exception);
+            if ((flags & PercentValue) != 0)
+              {
+                geometry.x*=(double) (*image)->columns/100.0;
+                geometry.y*=(double) (*image)->rows/100.0;
+              }
             mogrify_image=RollImage(*image,geometry.x,geometry.y,exception);
             break;
           }
@@ -3450,6 +3467,8 @@ static MagickBooleanType MogrifyUsage(void)
       "-auto-gamma          automagically adjust gamma level of image",
       "-auto-level          automagically adjust color levels of image",
       "-auto-orient         automagically orient (rotate) image",
+      "-auto-threshold method",
+      "                     automatically perform image thresholding",
       "-bench iterations    measure performance",
       "-black-threshold value",
       "                     force all pixels below the threshold into black",
@@ -4101,6 +4120,23 @@ WandExport MagickBooleanType MogrifyImageCommand(ImageInfo *image_info,
           break;
         if (LocaleCompare("auto-orient",option+1) == 0)
           break;
+        if (LocaleCompare("auto-threshold",option+1) == 0)
+          {
+            ssize_t
+              method;
+
+            if (*option == '+')
+              break;
+            i++;
+            if (i == (ssize_t) argc)
+              ThrowMogrifyException(OptionError,"MissingArgument",option);
+            method=ParseCommandOption(MagickAutoThresholdOptions,MagickFalse,
+              argv[i]);
+            if (method < 0)
+              ThrowMogrifyException(OptionError,"UnrecognizedThresholdMethod",
+                argv[i]);
+            break;
+          }
         if (LocaleCompare("average",option+1) == 0)
           break;
         ThrowMogrifyException(OptionError,"UnrecognizedOption",option)
@@ -6616,10 +6652,10 @@ WandExport MagickBooleanType MogrifyImageInfo(ImageInfo *image_info,
           {
             if (*option == '+')
               {
-                (void) SetImageOption(image_info,option+1,"0.0");
+                (void) SetImageOption(image_info,"convolve:bias","0.0");
                 break;
               }
-            (void) SetImageOption(image_info,option+1,argv[i+1]);
+            (void) SetImageOption(image_info,"convolve:bias",argv[i+1]);
             break;
           }
         if (LocaleCompare("black-point-compensation",option+1) == 0)

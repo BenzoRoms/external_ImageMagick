@@ -975,15 +975,23 @@ MagickExport MagickBooleanType OpaquePaintImage(Image *image,
       GetPixelInfoPixel(image,q,&pixel);
       if (IsFuzzyEquivalencePixelInfo(&pixel,&conform_target) != invert)
         {
-          if (image->channel_map[RedPixelChannel].traits == UpdatePixelTrait)
+          PixelTrait
+            traits;
+
+          traits=GetPixelChannelTraits(image,RedPixelChannel);
+          if ((traits & UpdatePixelTrait) != 0)
             SetPixelRed(image,conform_fill.red,q);
-          if (image->channel_map[GreenPixelChannel].traits == UpdatePixelTrait)
+          traits=GetPixelChannelTraits(image,GreenPixelChannel);
+          if ((traits & UpdatePixelTrait) != 0)
             SetPixelGreen(image,conform_fill.green,q);
-          if (image->channel_map[BluePixelChannel].traits == UpdatePixelTrait)
+          traits=GetPixelChannelTraits(image,BluePixelChannel);
+          if ((traits & UpdatePixelTrait) != 0)
             SetPixelBlue(image,conform_fill.blue,q);
-          if (image->channel_map[BlackPixelChannel].traits == UpdatePixelTrait)
+          traits=GetPixelChannelTraits(image,BlackPixelChannel);
+          if ((traits & UpdatePixelTrait) != 0)
             SetPixelBlack(image,conform_fill.black,q);
-          if (image->channel_map[AlphaPixelChannel].traits == UpdatePixelTrait)
+          traits=GetPixelChannelTraits(image,AlphaPixelChannel);
+          if ((traits & UpdatePixelTrait) != 0)
             SetPixelAlpha(image,conform_fill.alpha,q);
         }
       q+=GetPixelChannels(image);

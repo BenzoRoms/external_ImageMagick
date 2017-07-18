@@ -2876,18 +2876,16 @@ static MagickBooleanType ReadDCMPixels(Image *image,DCMInfo *info,
               }
           if (info->signed_data == 1)
             pixel_value-=32767;
-          if (info->rescale)
+          index=pixel_value;
+          if (info->rescale != MagickFalse)
             {
               double
                 scaled_value;
 
               scaled_value=pixel_value*info->rescale_slope+
                 info->rescale_intercept;
-              if (info->window_width == 0)
-                {
-                  index=(int) scaled_value;
-                }
-              else
+              index=(int) scaled_value;
+              if (info->window_width != 0)
                 {
                   double
                     window_max,
@@ -2906,10 +2904,6 @@ static MagickBooleanType ReadDCMPixels(Image *image,DCMInfo *info,
                       index=(int) (info->max_value*(((scaled_value-
                         info->window_center-0.5)/(info->window_width-1))+0.5));
                 }
-            }
-          else
-            {
-              index=pixel_value;
             }
           index&=info->mask;
           index=(int) ConstrainColormapIndex(image,(ssize_t) index,exception);
@@ -3269,6 +3263,9 @@ static Image *ReadDCMImage(const ImageInfo *image_info,ExceptionInfo *exception)
         else
           if ((quantum != 0) && (length != 0))
             {
+              if (length > GetBlobSize(image))
+                ThrowDCMException(CorruptImageError,
+                  "InsufficientImageDataInFile");
               if (~length >= 1)
                 data=(unsigned char *) AcquireQuantumMemory(length+1,quantum*
                   sizeof(*data));
@@ -3751,26 +3748,16 @@ static Image *ReadDCMImage(const ImageInfo *image_info,ExceptionInfo *exception)
       int
         c;
 
-      size_t
-        length;
-
-      unsigned int
-        tag;
-
       /*
         Read offset table.
       */
       for (i=0; i < (ssize_t) stream_info->remaining; i++)
         (void) ReadBlobByte(image);
-      tag=(ReadBlobLSBShort(image) << 16) | ReadBlobLSBShort(image);
-      (void) tag;
+      (void)((ReadBlobLSBShort(image) << 16) | ReadBlobLSBShort(image));
       length=(size_t) ReadBlobLSBLong(image);
       stream_info->offset_count=length >> 2;
       if (stream_info->offset_count != 0)
         {
-          MagickOffsetType
-            offset;
-
           stream_info->offsets=(ssize_t *) AcquireQuantumMemory(
             stream_info->offset_count,sizeof(*stream_info->offsets));
           if (stream_info->offsets == (ssize_t *) NULL)
@@ -3865,9 +3852,6 @@ static Image *ReadDCMImage(const ImageInfo *image_info,ExceptionInfo *exception)
       QuantumAny
         range;
 
-      size_t
-        length;
-
       /*
         Compute pixel scaling table.
       */
@@ -3881,9 +3865,6 @@ static Image *ReadDCMImage(const ImageInfo *image_info,ExceptionInfo *exception)
     }
   if (image->compression == RLECompression)
     {
-      size_t
-        length;
-
       unsigned int
         tag;
 
@@ -3898,9 +3879,6 @@ static Image *ReadDCMImage(const ImageInfo *image_info,ExceptionInfo *exception)
       stream_info->offset_count=length >> 2;
       if (stream_info->offset_count != 0)
         {
-          MagickOffsetType
-            offset;
-
           stream_info->offsets=(ssize_t *) AcquireQuantumMemory(
             stream_info->offset_count,sizeof(*stream_info->offsets));
           if (stream_info->offsets == (ssize_t *) NULL)

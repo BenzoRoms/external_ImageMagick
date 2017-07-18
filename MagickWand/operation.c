@@ -1806,6 +1806,16 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
           new_image=AutoOrientImage(_image,_image->orientation,_exception);
           break;
         }
+      if (LocaleCompare("auto-threshold",option+1) == 0)
+        {
+          AutoThresholdMethod
+            method;
+
+          method=(AutoThresholdMethod) ParseCommandOption(
+            MagickAutoThresholdOptions,MagickFalse,arg1);
+          (void) AutoThresholdImage(_image,method,_exception);
+          break;
+        }
       CLIWandExceptionBreak(OptionError,"UnrecognizedOption",option);
     }
     case 'b':
@@ -1965,7 +1975,7 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
           if (IfNormalOp)
             (void) ClipImage(_image,_exception);
           else /* "+mask" remove the write mask */
-            (void) SetImageMask(_image,ReadPixelMask,(Image *) NULL,_exception);
+            (void) SetImageMask(_image,WritePixelMask,(Image *) NULL,_exception);
           break;
         }
       if (LocaleCompare("clip-mask",option+1) == 0)
@@ -3109,12 +3119,12 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
             CLIWandExceptArgBreak(OptionError,"InvalidArgument",option,arg1);
           if (*option == '+')
             {
-              (void) SetImageRegionMask(_image,ReadPixelMask,
+              (void) SetImageRegionMask(_image,WritePixelMask,
                 (const RectangleInfo *) NULL,_exception);
               break;
             }
           (void) ParseGravityGeometry(_image,arg1,&geometry,_exception);
-          (void) SetImageRegionMask(_image,ReadPixelMask,&geometry,_exception);
+          (void) SetImageRegionMask(_image,WritePixelMask,&geometry,_exception);
           break;
         }
       if (LocaleCompare("remap",option+1) == 0)
@@ -3168,7 +3178,12 @@ static MagickBooleanType CLISimpleOperatorImage(MagickCLI *cli_wand,
         {
           if (IsGeometry(arg1) == MagickFalse)
             CLIWandExceptArgBreak(OptionError,"InvalidArgument",option,arg1);
-          (void) ParsePageGeometry(_image,arg1,&geometry,_exception);
+          flags=ParsePageGeometry(_image,arg1,&geometry,_exception);
+          if ((flags & PercentValue) != 0)
+            {
+              geometry.x*=(double) _image->columns/100.0;
+              geometry.y*=(double) _image->rows/100.0;
+            }
           new_image=RollImage(_image,geometry.x,geometry.y,_exception);
           break;
         }

@@ -212,11 +212,12 @@ static int
 %
 */
 MagickExport CustomStreamInfo *AcquireCustomStreamInfo(
-  ExceptionInfo *exception)
+  ExceptionInfo *magick_unused(exception))
 {
   CustomStreamInfo
     *custom_stream;
 
+  magick_unreferenced(exception);
   custom_stream=(CustomStreamInfo *) AcquireMagickMemory(
     sizeof(*custom_stream));
   if (custom_stream == (CustomStreamInfo *) NULL)
@@ -1517,7 +1518,22 @@ MagickExport MagickSizeType GetBlobSize(const Image *image)
       break;
     }
     case CustomStream:
+    {
+      if ((image->blob->custom_stream->teller != (CustomStreamTeller) NULL) &&
+          (image->blob->custom_stream->seeker != (CustomStreamSeeker) NULL))
+        {
+          MagickOffsetType
+            offset;
+
+          offset=image->blob->custom_stream->teller(
+            image->blob->custom_stream->data);
+          extent=image->blob->custom_stream->seeker(0,SEEK_END,
+            image->blob->custom_stream->data);
+          image->blob->custom_stream->seeker(offset,SEEK_SET,
+            image->blob->custom_stream->data);
+        }
       break;
+    }
   }
   return(extent);
 }
@@ -1766,7 +1782,6 @@ MagickExport void ImageToCustomStream(const ImageInfo *image_info,Image *image,
   assert(image->signature == MagickCoreSignature);
   assert(image_info->custom_stream != (CustomStreamInfo *) NULL);
   assert(image_info->custom_stream->signature == MagickCoreSignature);
-  assert(image_info->custom_stream->reader != (CustomStreamHandler) NULL);
   assert(image_info->custom_stream->writer != (CustomStreamHandler) NULL);
   assert(exception != (ExceptionInfo *) NULL);
   blob_info=CloneImageInfo(image_info);
@@ -1778,7 +1793,7 @@ MagickExport void ImageToCustomStream(const ImageInfo *image_info,Image *image,
   if (magick_info == (const MagickInfo *) NULL)
     {
       (void) ThrowMagickException(exception,GetMagickModule(),
-        MissingDelegateError,"NoDecodeDelegateForThisImageFormat","`%s'",
+        MissingDelegateError,"NoEncodeDelegateForThisImageFormat","`%s'",
         image->magick);
       blob_info=DestroyImageInfo(blob_info);
       return;
@@ -2176,7 +2191,7 @@ MagickExport void ImagesToCustomStream(const ImageInfo *image_info,
   if (magick_info == (const MagickInfo *) NULL)
     {
       (void) ThrowMagickException(exception,GetMagickModule(),
-        MissingDelegateError,"NoDecodeDelegateForThisImageFormat","`%s'",
+        MissingDelegateError,"NoEncodeDelegateForThisImageFormat","`%s'",
         images->magick);
       blob_info=DestroyImageInfo(blob_info);
       return;
@@ -3366,8 +3381,9 @@ MagickExport ssize_t ReadBlob(Image *image,const size_t length,void *data)
     }
     case CustomStream:
     {
-      count=image->blob->custom_stream->reader(q,length,
-        image->blob->custom_stream->data);
+      if (image->blob->custom_stream->reader != (CustomStreamHandler) NULL)
+        count=image->blob->custom_stream->reader(q,length,
+          image->blob->custom_stream->data);
       break;
     }
   }
@@ -5168,11 +5184,11 @@ MagickExport ssize_t WriteBlob(Image *image,const size_t length,
 
   assert(image != (Image *) NULL);
   assert(image->signature == MagickCoreSignature);
-  assert(data != (const void *) NULL);
   assert(image->blob != (BlobInfo *) NULL);
   assert(image->blob->type != UndefinedStream);
   if (length == 0)
     return(0);
+  assert(data != (const void *) NULL);
   count=0;
   p=(const unsigned char *) data;
   switch (image->blob->type)
@@ -5313,8 +5329,9 @@ MagickExport ssize_t WriteBlob(Image *image,const size_t length,
     }
     case CustomStream:
     {
-      count=image->blob->custom_stream->writer((const unsigned char *) data,
-        length,image->blob->custom_stream->data);
+      if (image->blob->custom_stream->writer != (CustomStreamHandler) NULL)
+        count=image->blob->custom_stream->writer((const unsigned char *) data,
+          length,image->blob->custom_stream->data);
       break;
     }
   }

@@ -3223,7 +3223,7 @@ MagickExport MagickBooleanType SetImageRegionMask(Image *image,
     case WritePixelMask: image->write_mask=MagickTrue; break;
     default: image->read_mask=MagickTrue; break;
   }
-  if (SyncImagePixelCache(image,exception) == MagickFalse)
+  if (SetImageStorageClass(image,DirectClass,exception) == MagickFalse)
     return(MagickFalse);
   status=MagickTrue;
   image_view=AcquireAuthenticCacheView(image,exception);

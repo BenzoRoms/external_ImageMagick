@@ -2758,6 +2758,8 @@ QUANTUM_DEPTH = @QUANTUM_DEPTH@
 RANLIB = @RANLIB@
 RAQM_CFLAGS = @RAQM_CFLAGS@
 RAQM_LIBS = @RAQM_LIBS@
+RAW_R_CFLAGS = @RAW_R_CFLAGS@
+RAW_R_LIBS = @RAW_R_LIBS@
 RMDelegate = @RMDelegate@
 RPM = @RPM@
 RSVGDecodeDelegate = @RSVGDecodeDelegate@
@@ -2961,6 +2963,7 @@ TOP_EXTRA_DIST = \
 	Platforms.txt \
 	README.txt \
 	index.html \
+	gitversion.sh \
 	version.sh \
 	winpath.sh
 
@@ -3477,7 +3480,7 @@ coders_djvu_la_LIBADD = $(MAGICKCORE_LIBS) $(DJVU_LIBS) $(JPEG_LIBS) $(LZMA_LIBS
 coders_dng_la_SOURCES = coders/dng.c
 coders_dng_la_CPPFLAGS = $(MAGICK_CODER_CPPFLAGS)
 coders_dng_la_LDFLAGS = $(MODULECOMMONFLAGS)
-coders_dng_la_LIBADD = $(MAGICKCORE_LIBS)
+coders_dng_la_LIBADD = $(MAGICKCORE_LIBS) $(RAW_LIBS)
 
 # DPS coder module
 coders_dps_la_SOURCES = coders/dps.c
@@ -4696,6 +4699,7 @@ MagickWand_libMagickWand_@MAGICK_MAJOR_VERSION@_@MAGICK_ABI_SUFFIX@_la_CPPFLAGS 
 @HAVE_LD_VERSION_SCRIPT_TRUE@MagickWand_libMagickWand_@MAGICK_MAJOR_VERSION@_@MAGICK_ABI_SUFFIX@_la_LDFLAGS_VERSION = -Wl,--version-script=$(top_srcdir)/MagickWand/libMagickWand.map
 MagickWand_libMagickWand_@MAGICK_MAJOR_VERSION@_@MAGICK_ABI_SUFFIX@_la_LDFLAGS = -no-undefined \
   $(MagickWand_libMagickWand_@MAGICK_MAJOR_VERSION@_@MAGICK_ABI_SUFFIX@_la_LDFLAGS_VERSION) $(MAGICK_LT_RELEASE_OPTS) \
+	-version-info \
 	$(MAGICK_LIBRARY_CURRENT):$(MAGICK_LIBRARY_REVISION):$(MAGICK_LIBRARY_AGE)
 
 MagickWand_libMagickWand_@MAGICK_MAJOR_VERSION@_@MAGICK_ABI_SUFFIX@_la_LIBADD = $(MAGICKCORE_LIBS) $(X11_LIBS) $(GOMP_LIBS) $(MATH_LIBS)
@@ -11718,7 +11722,7 @@ magick-version: MagickCore/version.h
 	fi ; \
 	touch magick-version
 
-${srcdir}/configure: ${srcdir}/version.sh
+${srcdir}/configure: ${srcdir}/version.sh ${srcdir}/gitversion.sh
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
